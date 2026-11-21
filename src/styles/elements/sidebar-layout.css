@@ -1,0 +1,94 @@
+/*
+ * Sidebar layout: an app's page with its navigation in a Sidebar down the left and the page's
+ * content beside it. On a narrow screen the Sidebar moves into a Drawer that a menu button opens,
+ * and a header across the top holds that button and an optional Navbar.
+ *
+ *   <beautiful-sidebar-layout>       the whole screen, on --sidebar-layout-backdrop.
+ *     <a data-skip href="#…">        first: "Skip to content", seen only while it has focus.
+ *     <nav data-sidebar>             the Sidebar, down the left on a wide screen. Hidden on a narrow one.
+ *     <header>                       the page's banner, shown only on a narrow screen.
+ *       <button data-icon-button>    opens the drawer.
+ *       <nav data-navbar>            optional: a Navbar, such as a user menu.
+ *     <dialog data-drawer="start">   the drawer, a modal Drawer holding the same Sidebar again.
+ *     <main id="…">                  the content, a pane on a wide screen, capped at --sidebar-layout-width.
+ *
+ * The Sidebar is in the markup twice, as Catalyst's is: one is always hidden, so the page has one
+ * navigation landmark of it at a time. The skip link, the header, the content and its pane are
+ * layout.css, shared with Stacked layout, and so is the 40rem breakpoint.
+ */
+beautiful-sidebar-layout {
+  --sidebar-width: 16rem;
+  --sidebar-layout-width: 72rem;
+  /* How tall the screen is: the Sidebar's height, which stays put while the content scrolls. */
+  --sidebar-layout-height: 100dvh;
+
+  /*
+   * A grid, wide or narrow, since a container query can't style the container itself. The first
+   * column is the Sidebar's, empty while it hides. The header takes the first row on a narrow
+   * screen, and the content the rest.
+   */
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  min-height: var(--sidebar-layout-height);
+  /* --sidebar-layout-backdrop, set here or on an ancestor, else the theme's. */
+  background: var(--sidebar-layout-backdrop, var(--layout-backdrop));
+}
+
+beautiful-sidebar-layout > header {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+beautiful-sidebar-layout > main {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+@container (width < 40rem) {
+  beautiful-sidebar-layout > nav[data-sidebar] {
+    display: none;
+  }
+
+  /* Only the menu button, with no Navbar to give the header its height. */
+  beautiful-sidebar-layout > header:not(:has(> nav[data-navbar])) {
+    padding-block: var(--space-2);
+  }
+}
+
+@container (width >= 40rem) {
+  /* No banner: the Sidebar holds it all. */
+  beautiful-sidebar-layout > header {
+    display: none;
+  }
+
+  /* The Sidebar sits on the page, not on a pane, and stays put while the content scrolls. */
+  beautiful-sidebar-layout > nav[data-sidebar] {
+    position: sticky;
+    inset-block-start: 0;
+    grid-column: 1;
+    grid-row: 1 / -1;
+    align-self: start;
+    inline-size: var(--sidebar-width);
+    block-size: var(--sidebar-layout-height);
+  }
+
+  /*
+   * The content's pane (layout.css), inset from the screen's top, right and bottom, and from the
+   * Sidebar by nothing more, since the Sidebar pads its own items. Its content is capped at
+   * --sidebar-layout-width, centered, by the padding. A padding's 100% is the column's width, so
+   * the pane's one margin and its border come off it.
+   */
+  beautiful-sidebar-layout > main {
+    min-block-size: calc(var(--sidebar-layout-height) - 2 * var(--space-2));
+    margin: var(--space-2);
+    margin-inline-start: 0;
+    padding: var(--space-8) max(var(--space-8), (100% - var(--sidebar-layout-width) - var(--space-2)) / 2 - 1px);
+  }
+}
+
+/* In the drawer, the Sidebar fills the panel: its header and footer pinned, its body scrolling between. */
+beautiful-sidebar-layout > dialog[data-drawer] > nav[data-sidebar] {
+  flex: 1;
+  min-block-size: 0;
+}

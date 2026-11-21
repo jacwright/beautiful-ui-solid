@@ -1,0 +1,48 @@
+/*
+ * Combobox: a text box that filters a list of options as you type. The text box is Input's, in a
+ * <beautiful-input-group> with a button at its end that shows the whole list. The list is Listbox's:
+ * Popover's panel holding a role="listbox" of options, with the same lit tint and check.
+ *
+ *   <beautiful-input-group>
+ *     <input role="combobox" aria-controls="…-listbox" aria-expanded aria-autocomplete="list">
+ *     <button data-variant="tertiary" tabindex="-1" aria-label="Show options"><svg>…</svg></button>
+ *   </beautiful-input-group>
+ *   <beautiful-popover popover="manual">
+ *     <beautiful-listbox role="listbox">options…</beautiful-listbox>
+ *     <p role="status">No matches</p>
+ *   </beautiful-popover>
+ *
+ * A search box (data-search on the group) has an <svg> magnifying glass first and no button, and
+ * its input is type="search".
+ *
+ * The filter hides the options that don't match (autocomplete.ts). When none is left, the list
+ * goes and the line under it shows instead. Every selector sits in :where(), so its specificity is
+ * 0, and this file comes after input.css and listbox.css.
+ */
+
+/* The text box opens the list on a click, so it keeps the text cursor, not the button's arrow. */
+:where(input[role="combobox"]) {
+  cursor: text;
+}
+
+/* A Combobox's list with no option left to show takes no room. A Listbox's never filters, so it keeps its own. */
+:where([popover]:has(> p[role="status"])) > :where([role="listbox"]:not(:has([role="option"]:not([hidden])))) {
+  display: none;
+}
+
+/* The line under the list: hidden while an option shows, and "No matches" when what was typed (data-filtered) matches none. */
+:where([popover]:has(> [role="listbox"])) > :where(p) {
+  display: none;
+  margin: 0;
+  padding: calc(var(--space-2) + var(--space-1)) calc(var(--control-pad-x) + var(--space-1));
+  color: var(--color-text-muted);
+}
+
+:where([popover][data-filtered]:has(> [role="listbox"]):not(:has(> [role="listbox"] [role="option"]:not([hidden])))) > :where(p) {
+  display: block;
+}
+
+/* A search box (search on the Solid Combobox): fully rounded, with its magnifying glass at the start and no button at the end. */
+:where(beautiful-input-group[data-search]) > :where(input) {
+  border-radius: var(--radius-full);
+}

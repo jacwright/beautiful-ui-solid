@@ -1,0 +1,131 @@
+/*
+ * Skeleton: a placeholder in the shape of content that is still loading. <beautiful-skeleton> is
+ * one shape, hidden from assistive tech (aria-hidden). <beautiful-skeleton-group aria-busy="true">
+ * is the region it stands in for, and says it is loading in a <beautiful-visually-hidden> label
+ * that a screen reader reads.
+ *
+ *   data-shape: left out for lines of text, rect for a block such as a chart or an image, circle
+ *               for an avatar.
+ *   --lines:    how many lines of text, set inline (style="--lines: 3"). Each is one line of the
+ *               text around it tall, so the real text takes the same room.
+ *   width, height: set inline.
+ *
+ * The fill is a tint of the text color, so it works on the canvas, a card, or glass. A band of
+ * light sweeps across it. Under reduced motion the band stays still and the fill breathes instead.
+ * Every selector sits in :where(), so a page's own class wins.
+ */
+:where(beautiful-skeleton) {
+  /*
+   * One line's bar: 60% of the line tall, with --radius-sm's 4px corners. An SVG can't read a
+   * token, so they're written in. It has no viewBox, so its percentages are of the mask tile and
+   * its corners never stretch.
+   */
+  --skeleton-bar: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><rect y='20%' width='100%' height='60%' rx='4'/></svg>");
+  --lines: 1;
+
+  position: relative;
+  display: inline-block;
+  vertical-align: top;
+  inline-size: 100%;
+  block-size: calc(var(--lines) * 1lh);
+  overflow: hidden;
+  background: var(--skeleton-fill);
+  /*
+   * Every line's bar, cut to all but the last line, plus the last line's bar. With two lines or
+   * more, the last is shorter, as the end of a paragraph is.
+   */
+  mask:
+    var(--skeleton-bar) 0 100% / calc(100% - (100% - var(--skeleton-last-line)) * min(1, var(--lines) - 1)) 1lh no-repeat,
+    var(--skeleton-bar) 0 0 / 100% 1lh repeat-y,
+    linear-gradient(#000 0 0) 0 0 / 100% calc(100% - 1lh) no-repeat;
+  mask-composite: add, intersect, add;
+  /* Fast loads never flash a placeholder: it waits a moment, then fades in. */
+  animation: skeleton-in var(--motion-enter) var(--ease-out) var(--skeleton-delay) backwards;
+}
+
+:where(beautiful-skeleton-group) {
+  display: block;
+}
+
+:where(beautiful-skeleton[data-shape]) {
+  mask: none;
+}
+
+:where(beautiful-skeleton[data-shape="rect"]) {
+  block-size: auto;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-md);
+}
+
+:where(beautiful-skeleton[data-shape="circle"]) {
+  inline-size: var(--skeleton-circle);
+  block-size: auto;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+
+/*
+ * The band of light: the shape's own size, bright from 30% to 70% of it, swept in from the near
+ * side and off the far side, then a pause.
+ */
+:where(beautiful-skeleton)::after {
+  --_angle: var(--skeleton-shine-angle);
+
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(var(--_angle), transparent 30%, var(--skeleton-shine) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: skeleton-shimmer var(--motion-shimmer) var(--ease-in-out) infinite;
+}
+
+:where(beautiful-skeleton:dir(rtl))::after {
+  /* Mirrored: the light sweeps the other way, and a slanted glint leans the other way. */
+  --_angle: calc(-1 * var(--skeleton-shine-angle));
+
+  animation-direction: reverse;
+}
+
+@keyframes skeleton-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes skeleton-shimmer {
+  70%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes skeleton-breathe {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* No movement: the band is gone, and the shape fades gently in and out so it still reads as loading. */
+@media (prefers-reduced-motion: reduce) {
+  :where(beautiful-skeleton) {
+    animation:
+      skeleton-in var(--motion-enter) var(--ease-out) var(--skeleton-delay) backwards,
+      skeleton-breathe var(--motion-shimmer) var(--ease-in-out) calc(var(--skeleton-delay) + var(--motion-enter)) infinite;
+  }
+
+  :where(beautiful-skeleton)::after {
+    content: none;
+  }
+}
+
+/* High contrast replaces background colors, which would leave no shape. GrayText draws it. */
+@media (forced-colors: active) {
+  :where(beautiful-skeleton) {
+    forced-color-adjust: none;
+    background: GrayText;
+  }
+
+  :where(beautiful-skeleton)::after {
+    content: none;
+  }
+}

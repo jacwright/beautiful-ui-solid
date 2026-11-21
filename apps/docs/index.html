@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="Beautiful UI kit: component specs and examples." />
+    <title>Beautiful UI</title>
+    <script>
+      // Apply the stored theme and mode before first paint. src/settings.ts owns the keys.
+      try {
+        const root = document.documentElement;
+        root.dataset.theme = localStorage.getItem("ui-docs:theme") ?? "modern";
+        root.dataset.mode =
+          localStorage.getItem("ui-docs:mode") ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <beautiful-app id="app"></beautiful-app>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

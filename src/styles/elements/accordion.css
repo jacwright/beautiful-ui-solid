@@ -1,0 +1,37 @@
+/*
+ * Accordion: Disclosures that open one at a time. Each is a native <details> with the same name,
+ * so the browser closes the open one when another opens. The group is <beautiful-accordion>, which
+ * draws a hairline between its items and stretches each summary across the row, its chevron at
+ * the end. Everything else is Disclosure's (disclosure.css): the tint, the turn of the chevron, the
+ * panel's growth.
+ *
+ * Every selector sits in :where(), so its specificity is 0, as in disclosure.css.
+ */
+:where(beautiful-accordion) {
+  display: block;
+}
+
+/* A hairline between items, none above the first or under the last, so it sits in any box. */
+:where(beautiful-accordion > details + details) {
+  border-block-start: var(--hairline-width) solid var(--color-hairline);
+}
+
+/*
+ * The summary takes the whole row, and its chevron sits at the end, where an eye down a list finds
+ * it. It still reaches out --space-2 on each side, so its words line up with the panel's and the
+ * text around the group, and its tint floats clear of the hairlines. Its words are the size of the
+ * text around it, as a list of questions is read rather than pressed.
+ */
+:where(beautiful-accordion > details > summary) {
+  justify-content: space-between;
+  gap: var(--space-3);
+  inline-size: auto;
+  max-inline-size: none;
+  min-block-size: var(--accordion-row);
+  margin-block: var(--space-1);
+  font-size: inherit;
+}
+
+:where(beautiful-accordion > details[open])::details-content {
+  padding-block: 0 var(--space-3);
+}

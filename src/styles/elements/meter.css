@@ -1,0 +1,86 @@
+/*
+ * Meter: a native <meter>, a level that stays, such as storage used of a plan's limit. It is drawn
+ * as a Progress bar is: a rounded track the same height, filled from the start of the line to
+ * value out of max.
+ *
+ * The fill's color says how the level stands, from the browser's own reading of low, high and
+ * optimum:
+ *
+ * - optimum: in the range optimum is in, the accent a primary Button is filled with, as Progress.
+ * - sub-optimum: one range away, the warning fill.
+ * - even less good: two ranges away, the danger fill.
+ *
+ * A meter with no low, high or optimum is always optimum.
+ *
+ * In a <beautiful-field> it takes the field's label, its value text at the end of the label's line,
+ * and a description under the bar. progress.css lays the field out, for a meter too.
+ *
+ * The browser draws the fill as a pseudo-element: one per state in Chrome and Safari
+ * (::-webkit-meter-optimum-value and its siblings), and ::-moz-meter-bar in Firefox, whose state is a
+ * pseudo-class on the meter. Each gets its own rule, because one selector a browser doesn't know
+ * drops every selector in its list. Every rule sits in :where(), so its specificity is 0.
+ */
+:where(meter) {
+  /* The fill's color in each state, at a primary Button's opacity on glass. */
+  --meter-optimum: var(--track-value);
+  --meter-warning: color-mix(in srgb, var(--color-warning-fill) var(--control-primary-opacity), transparent);
+  --meter-danger: color-mix(in srgb, var(--color-danger-fill) var(--control-primary-opacity), transparent);
+  /* The state this meter is in. Firefox sets it below. */
+  --meter-color: var(--meter-optimum);
+
+  display: block;
+  inline-size: 100%;
+  block-size: var(--meter-height);
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--track-fill);
+  box-shadow: var(--track-shadow);
+  backdrop-filter: blur(var(--control-blur)) saturate(var(--control-saturate));
+  appearance: none;
+  overflow: hidden;
+}
+
+/* Firefox reads the state as a pseudo-class on the meter. */
+:where(meter:-moz-meter-sub-optimum) {
+  --meter-color: var(--meter-warning);
+}
+
+:where(meter:-moz-meter-sub-sub-optimum) {
+  --meter-color: var(--meter-danger);
+}
+
+/* Chrome and Safari: the track is the meter's own background, so the browser's bar is cleared. */
+:where(meter)::-webkit-meter-inner-element {
+  /* As a block its bar keeps a height of its own, half the track's. A flex row stretches it to the track. */
+  display: flex;
+}
+
+:where(meter)::-webkit-meter-bar {
+  flex: 1;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+}
+
+:where(meter)::-webkit-meter-optimum-value {
+  border-radius: var(--radius-full);
+  background: var(--progress-sheen), var(--meter-color);
+  transition: inline-size var(--motion-enter) var(--ease-out);
+}
+
+:where(meter)::-webkit-meter-suboptimum-value {
+  border-radius: var(--radius-full);
+  background: var(--progress-sheen), var(--meter-warning);
+  transition: inline-size var(--motion-enter) var(--ease-out);
+}
+
+:where(meter)::-webkit-meter-even-less-good-value {
+  border-radius: var(--radius-full);
+  background: var(--progress-sheen), var(--meter-danger);
+  transition: inline-size var(--motion-enter) var(--ease-out);
+}
+
+:where(meter)::-moz-meter-bar {
+  border-radius: var(--radius-full);
+  background: var(--progress-sheen), var(--meter-color);
+}

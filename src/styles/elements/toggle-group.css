@@ -1,0 +1,209 @@
+/*
+ * Toggle group: <beautiful-toggle-group> around segments that sit in one groove. One choice is a
+ * segmented control, role="radiogroup" around <button role="radio" aria-checked>. Several at once
+ * is role="group" around <button aria-pressed>. The keys are toggle-group-keys.ts.
+ *
+ * The group is a groove cut into the surface (Switch's --track-shadow, and in glass a frosted
+ * --toggle-groove), and its segments are text on it. A segment that's on rises out of it on a raised pane, a secondary Button's
+ * (--control-*):
+ *
+ *   - One choice: one pane, the thumb, which glides to the checked segment. It is the group's
+ *     ::after, placed with anchor positioning as Tabs places its line. Where anchor positioning
+ *     is missing, the checked segment draws the pane itself and nothing moves.
+ *   - Several at once: a pane under each pressed segment, which fades and grows in, and pressed
+ *     neighbours share one pane.
+ *
+ *   data-fill: the group takes the full width, and its segments share it equally.
+ *
+ * Every selector sits in :where(), so its specificity is 0, and this file comes after button.css
+ * and toggle-button.css, so its rules win by order.
+ */
+:where(beautiful-toggle-group) {
+  /* The groove's lip around a pane. */
+  --toggle-track-pad: 0.125rem;
+
+  position: relative;
+  /* The panes stack inside the group, not against the page. */
+  isolation: isolate;
+  anchor-scope: --toggle-on;
+  display: inline-flex;
+  max-width: 100%;
+  vertical-align: middle;
+  padding: var(--toggle-track-pad);
+  border-radius: calc(var(--radius-md) + var(--toggle-track-pad));
+  /* Glass frosts the groove, so its text keeps its contrast over bright content. Classic's is Switch's track. */
+  background-color: var(--toggle-groove, var(--track-fill));
+  backdrop-filter: blur(var(--control-blur)) saturate(var(--control-saturate));
+  box-shadow: var(--track-shadow);
+}
+
+:where(beautiful-toggle-group[data-fill]) {
+  display: flex;
+  width: 100%;
+}
+
+/*
+ * Every segment is text on the groove, a Button's height less the groove's lip. It is not a
+ * Button's pane, and a pressed one is not Toggle button's sunk well: the pane draws the state.
+ */
+:where(beautiful-toggle-group) > :where(button) {
+  --button-press: none;
+
+  --button-radius: var(--radius-md);
+
+  min-height: calc(var(--control-height) - 2 * var(--toggle-track-pad));
+  border: 1px solid transparent;
+  background: transparent;
+  backdrop-filter: none;
+  box-shadow: none;
+  color: var(--button-ink);
+}
+
+:where(beautiful-toggle-group) > :where(button:not([data-icon-button])) {
+  padding-inline: calc(var(--control-pad-x) - 1px);
+}
+
+:where(beautiful-toggle-group[data-fill]) > :where(button) {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* No rim of a Button's on a segment; several at once draws its pane's shadow there instead. */
+:where(beautiful-toggle-group) > :where(button)::before {
+  content: none;
+}
+
+/*
+ * A focused segment's ring draws over its neighbours and the thumb. A pressed segment of several
+ * stays out of the stack, so its pane keeps to the group's (below).
+ */
+:where(beautiful-toggle-group) > :where([role="radio"]:focus-visible) {
+  z-index: 2;
+}
+
+@media (hover: hover) {
+  :where(beautiful-toggle-group) > :where(button:not([aria-checked="true"], [aria-pressed="true"], :disabled)):where(:hover) {
+    background-color: color-mix(in oklab, var(--button-ink) 6%, transparent);
+  }
+}
+
+/* One choice: the thumb. The segments sit over it. */
+:where(beautiful-toggle-group) > :where([role="radio"]) {
+  z-index: 1;
+}
+
+@supports (anchor-name: --a) {
+  :where(beautiful-toggle-group) > :where([role="radio"][aria-checked="true"]) {
+    anchor-name: --toggle-on;
+  }
+
+  :where(beautiful-toggle-group:has(> [role="radio"][aria-checked="true"]))::after {
+    content: "";
+    position: absolute;
+    position-anchor: --toggle-on;
+    inset: anchor(top) anchor(right) anchor(bottom) anchor(left);
+    border: 1px solid var(--control-pane-edge);
+    border-radius: var(--radius-md);
+    background-color: var(--control-fill);
+    background-image: var(--control-sheen);
+    backdrop-filter: blur(var(--control-blur)) saturate(var(--control-saturate));
+    box-shadow: var(--control-shadow);
+    pointer-events: none;
+    transition: inset var(--motion-slide) var(--ease-in-out);
+  }
+
+  :where(beautiful-toggle-group:has(> [role="radio"][aria-checked="true"]:disabled))::after {
+    opacity: 0.5;
+  }
+}
+
+@supports not (anchor-name: --a) {
+  :where(beautiful-toggle-group) > :where([role="radio"][aria-checked="true"]) {
+    border-color: var(--control-pane-edge);
+    background-color: var(--control-fill);
+    background-image: var(--control-sheen);
+    box-shadow: var(--control-shadow);
+  }
+}
+
+/*
+ * Several at once: the pane is two pseudo-elements behind the segment's text, its shadow
+ * (::before) under every fill (::after), so one pane's shadow never falls across the next. The
+ * segments hold no stacking context of their own, so every pane stacks in the group's.
+ */
+:where(beautiful-toggle-group) > :where([aria-pressed])::before,
+:where(beautiful-toggle-group) > :where([aria-pressed])::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  /* Not a Button's rim, which ::before also is in button.css: no size, padding, paint or mask of its. */
+  width: auto;
+  height: auto;
+  padding: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  mask: none;
+  transform-origin: center;
+  opacity: 0;
+  transform: scale(0.94);
+  pointer-events: none;
+  transition:
+    opacity var(--motion-quick) var(--ease-out),
+    transform var(--motion-quick) var(--ease-out);
+}
+
+:where(beautiful-toggle-group) > :where([aria-pressed])::before {
+  z-index: -2;
+  box-shadow: var(--control-shadow);
+}
+
+:where(beautiful-toggle-group) > :where([aria-pressed])::after {
+  z-index: -1;
+  border: 1px solid var(--control-pane-edge);
+  background-color: var(--control-fill);
+  background-image: var(--control-sheen);
+  backdrop-filter: blur(var(--control-blur)) saturate(var(--control-saturate));
+}
+
+:where(beautiful-toggle-group) > :where([aria-pressed="true"])::before,
+:where(beautiful-toggle-group) > :where([aria-pressed="true"])::after {
+  opacity: 1;
+  transform: none;
+}
+
+/*
+ * Disabled fades the text and the pane, not the segment: an opacity on the segment would give it a
+ * stacking context of its own, and lift its pane's shadow over a neighbour's.
+ */
+:where(beautiful-toggle-group) > :where([aria-pressed]:disabled) {
+  opacity: 1;
+  color: color-mix(in oklab, var(--button-ink) 50%, transparent);
+}
+
+:where(beautiful-toggle-group) > :where([aria-pressed="true"]:disabled)::before,
+:where(beautiful-toggle-group) > :where([aria-pressed="true"]:disabled)::after {
+  opacity: 0.5;
+}
+
+/* Pressed neighbours share one pane: square where they meet, with no edge between them. */
+:where(beautiful-toggle-group) > :where([aria-pressed="true"] + [aria-pressed="true"])::before,
+:where(beautiful-toggle-group) > :where([aria-pressed="true"] + [aria-pressed="true"])::after {
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+  border-inline-start-width: 0;
+}
+
+:where(beautiful-toggle-group) > :where([aria-pressed="true"]:has(+ [aria-pressed="true"]))::before,
+:where(beautiful-toggle-group) > :where([aria-pressed="true"]:has(+ [aria-pressed="true"]))::after {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+  border-inline-end-width: 0;
+}
+
+/* Under reduced motion a pane only fades. */
+@media (prefers-reduced-motion: reduce) {
+  :where(beautiful-toggle-group) > :where([aria-pressed])::before,
+  :where(beautiful-toggle-group) > :where([aria-pressed])::after {
+    transform: none;
+  }
+}

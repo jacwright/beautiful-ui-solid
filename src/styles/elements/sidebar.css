@@ -1,0 +1,193 @@
+/*
+ * Sidebar: an app's own navigation, down the side of the screen. It is <nav data-sidebar>, named
+ * with aria-label, and fills the height its layout gives it. Up to three parts, in this order:
+ *
+ *   <header>                  pinned at the top: the team or site switcher, a search button.
+ *   <beautiful-sidebar-body>  the body, which scrolls when the items don't fit.
+ *   <footer>                  pinned at the bottom: the account.
+ *
+ * An item is an <a href> to go somewhere, or a <button> to do something (open a menu, a search).
+ * One that names a data-variant is a Button, and keeps Button's look, as in a Navbar.
+ * It is one row: an optional leading <svg>, its label, and an optional trailing <svg>, such as a
+ * Dropdown's chevron. The item for the page you're on has aria-current="page".
+ * <beautiful-sidebar-section role="group"> with a <header> is a section of the body under a small
+ * heading, and <hr> divides it. The kit writes no <div> or <span>: a part with no native element is
+ * a beautiful-* element.
+ *
+ * The current item is a raised pane: the control fill, as a secondary Button is, so on glass it is
+ * a pane of frosted glass with the rim. Other items are text until the pointer is over them, when
+ * they take a tertiary Button's tint: 8% of the text color, 14% pressed, as a Navbar's items do. Every selector sits in :where(), so its specificity is 0, and
+ * this file comes after link.css and button.css, whose looks it replaces on its items.
+ */
+:where(nav[data-sidebar]) {
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+  min-block-size: 0;
+  font-size: var(--control-font-size);
+}
+
+/* The header, the body and the footer: a column of items each. */
+:where(nav[data-sidebar]) > :where(header, beautiful-sidebar-body, footer) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--item-gap);
+  padding: var(--sidebar-pad);
+}
+
+:where(nav[data-sidebar]) > :where(header) {
+  border-block-end: var(--hairline-width) solid var(--color-hairline);
+  /* Glass's lit edge, under the line, as a Divider's. Classic's is transparent. */
+  box-shadow: 0 var(--hairline-width) var(--hairline-lit);
+}
+
+:where(nav[data-sidebar]) > :where(footer) {
+  margin-block-start: auto;
+  border-block-start: var(--hairline-width) solid var(--color-hairline);
+  box-shadow: inset 0 var(--hairline-width) var(--hairline-lit);
+}
+
+/* The body takes the room between, and scrolls on its own, so the header and footer stay put. */
+:where(nav[data-sidebar]) > :where(beautiful-sidebar-body) {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* A section: its heading, then its items. A space above it sets it apart from what comes before. */
+:where(nav[data-sidebar]) :where(beautiful-sidebar-section) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--item-gap);
+}
+
+:where(nav[data-sidebar] > beautiful-sidebar-body) > :where(* + beautiful-sidebar-section, beautiful-sidebar-section + *) {
+  margin-block-start: var(--space-6);
+}
+
+:where(nav[data-sidebar]) :where(beautiful-sidebar-section) > :where(header) {
+  padding: 0 var(--space-2) var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: var(--leading-sm);
+}
+
+/* A divider in the sidebar's own parts, not in a menu opened from it. Divider draws the line. */
+:where(nav[data-sidebar] > *, nav[data-sidebar] beautiful-sidebar-section) > :where(hr) {
+  margin: var(--space-3) var(--space-2);
+}
+
+/*
+ * An item. Only the direct children of the nav, its parts and its sections, so the items of a
+ * Dropdown opened from the header keep their own look. Its states nest in the one selector, and
+ * & keeps the :where() specificity of 0.
+ */
+:where(nav[data-sidebar], nav[data-sidebar] > *, nav[data-sidebar] beautiful-sidebar-section) > :where(a:any-link, button):where(:not([data-variant], [data-button])) {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--sidebar-item-gap);
+  inline-size: 100%;
+  min-block-size: var(--sidebar-item-height);
+  /* The border is part of the height, as a Button's is: the current item draws it. */
+  padding: calc(var(--space-1) - 1px) calc(var(--space-2) - 1px);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  background: none;
+  backdrop-filter: none;
+  box-shadow: none;
+  font-size: inherit;
+  font-weight: 500;
+  line-height: var(--leading-sm);
+  text-align: start;
+  text-decoration: none;
+  transform: none;
+  transition: background-color var(--motion-quick) var(--ease-out);
+
+  /* Button's rim is drawn on the current item only. */
+  &::before {
+    content: none;
+  }
+
+  /* An icon: the first child, muted, and the text's color while the item is lit. A last one sits at the end. */
+  > :where(svg) {
+    flex: none;
+    inline-size: var(--control-icon);
+    block-size: var(--control-icon);
+    color: var(--color-text-muted);
+    transition: color var(--motion-quick) var(--ease-out);
+  }
+
+  > :where(svg:last-child:not(:first-child)) {
+    margin-inline-start: auto;
+  }
+
+  /* Link's new-tab arrow is a flex child here, so it gives back the gap to sit by the last word. */
+  &:where([target="_blank"])::after {
+    margin-inline-start: calc(-1 * var(--space-3));
+  }
+
+  @media (hover: hover) {
+    &:where(:not([aria-current="page"], :disabled):hover) {
+      background-color: color-mix(in oklab, var(--color-text) 8%, transparent);
+    }
+
+    &:where(:not(:disabled):hover) > :where(svg) {
+      color: var(--color-text);
+    }
+  }
+
+  &:where(:not([aria-current="page"], :disabled):active) {
+    background-color: color-mix(in oklab, var(--color-text) 14%, transparent);
+  }
+
+  /* A button whose menu is open stays lit, as under the pointer. The menu follows its button. */
+  &:where(button:not([aria-current="page"]):has(+ :popover-open)) {
+    background-color: color-mix(in oklab, var(--color-text) 8%, transparent);
+  }
+
+  /*
+   * The current item: a raised pane, a secondary Button's fill, edge and shadow, so on glass it is
+   * frosted with the rim and its hotspot (the theme's --nav-current-*; modern lays a flat tint instead).
+   * Its icon takes the accent, so the eye finds it at a glance.
+   */
+  &:where([aria-current="page"]) {
+    border-color: var(--nav-current-edge);
+    background-color: var(--nav-current-fill);
+    background-image: var(--control-sheen);
+    backdrop-filter: blur(var(--control-blur)) saturate(var(--control-saturate));
+    box-shadow: var(--nav-current-shadow);
+
+    > :where(svg) {
+      color: var(--color-accent);
+    }
+
+    &::before {
+      /* Classic sets this to none. See button.css for the rim. */
+      content: var(--control-rim-content);
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      width: calc((100% + 2px) / var(--surface-rim-scale));
+      height: calc((100% + 2px) / var(--surface-rim-scale));
+      padding: 1px;
+      border-radius: calc(var(--radius-md) / var(--surface-rim-scale));
+      background: var(--control-hotspot), var(--control-rim);
+      mask:
+        linear-gradient(#000 0 0) content-box exclude,
+        linear-gradient(#000 0 0);
+      transform: scale(var(--surface-rim-scale));
+      transform-origin: 0 0;
+      pointer-events: none;
+    }
+
+    /* Forced colors drop the fill, so the current item keeps its edge in the text color. */
+    @media (forced-colors: active) {
+      border-color: CanvasText;
+    }
+  }
+}

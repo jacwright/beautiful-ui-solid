@@ -1,0 +1,239 @@
+/*
+ * Table: rows of data on a native <table>, held in a <beautiful-table>.
+ *
+ * <beautiful-table> is the pane the rows sit on, and it scrolls sideways when the table is wider
+ * than the screen, so a wide table never widens the page. Classic draws the pane as a raised
+ * card. Glass frosts it as densely as a popup, so the rows keep their contrast over a bright
+ * page. In a dialog, a popover or a card, and with data-plain, it draws no pane: the rows sit on that
+ * surface, and the first and last columns line up with the text around them.
+ *
+ *   data-dense:   shorter rows, for many rows on one screen.
+ *   data-striped: every other body row tinted.
+ *   data-grid:    lines between the columns as well as the rows.
+ *   data-plain:   no pane.
+ *
+ * Cells are native <th> and <td>. <th scope="col"> heads a column and <th scope="row"> a row.
+ * data-align="end" on a cell lines it up on its end edge, for numbers. Every number in a table
+ * has figures of one width, so the digits of a column line up.
+ *
+ * A row link: <a data-row-link> in a row's first cell. The row lights under the pointer, and
+ * the Solid component makes a click anywhere in the row follow it. The pointer is a hand only
+ * over the link, so a static page with no JS promises no more than it does.
+ *
+ * An empty table: one <td data-empty colspan> across every column, saying why it's empty.
+ *
+ * A sortable column: a <button data-sort> in its <th>. The column it's sorted by has aria-sort on its
+ * <th>, and the button draws an arrow for its direction.
+ *
+ * A bare <table>, such as one written in Markdown, takes the same rows with no pane. The
+ * calendar of a DatePicker is a grid of days, not a table of data, so none of this reaches it.
+ *
+ * Every selector sits in :where(), so its specificity is 0, as in button.css.
+ */
+:where(beautiful-table) {
+  /* Muted text, such as the header, takes the surface's stronger shade, as in Popover. */
+  --color-text-muted: var(--surface-text-muted);
+  /* A cell's side padding, 16px without a pane. The caption keeps it too, so it lines up with the first column. */
+  --table-pad-x: var(--space-4);
+
+  display: block;
+  max-inline-size: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--table-edge);
+  border-radius: var(--radius-lg);
+  background-color: var(--table-fill);
+  background-image: var(--surface-sheen);
+  backdrop-filter: blur(var(--table-blur)) saturate(var(--surface-saturate));
+}
+
+/* A surface holds the rows already. */
+:where(beautiful-table[data-plain], dialog beautiful-table, [popover] beautiful-table, :is(beautiful-card, [data-card]) beautiful-table) {
+  --color-text-muted: inherit;
+
+  /*
+   * The outer columns sit at the text's edge. A little room on each side, given back by the
+   * margin, keeps a focus ring at that edge from being clipped by the scroll.
+   */
+  margin-inline: calc(-1 * var(--space-1));
+  padding-inline: var(--space-1);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  backdrop-filter: none;
+}
+
+:where(table:not([data-date-picker] table)) {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+:where(table:not([data-date-picker] table)) > :where(caption) {
+  padding: var(--space-3) var(--table-pad-x, var(--space-4)) var(--space-1);
+  font-weight: var(--weight-strong);
+  text-align: start;
+}
+
+:where(table:not([data-date-picker] table)) :where(th, td) {
+  /* A cell's height is its least: a cell that wraps grows. */
+  block-size: var(--table-row-height);
+  padding: var(--space-2) var(--table-pad-x, var(--space-4));
+  border-block-end: 1px solid var(--table-rule);
+  text-align: start;
+  vertical-align: middle;
+}
+
+:where(table:not([data-date-picker] table)) :where(thead) :where(th, td) {
+  border-block-end-color: var(--table-rule-strong);
+}
+
+:where(table:not([data-date-picker] table)) :where(thead th) {
+  color: var(--color-text-muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* A row's header names the row, so it keeps the text color. */
+:where(table:not([data-date-picker] table)) :where(tbody th) {
+  font-weight: 500;
+}
+
+/* The pane's edge closes the table, so the last row has no line under it. */
+:where(table:not([data-date-picker] table)) > :where(tbody:last-child) > :where(tr:last-child) > :where(th, td) {
+  border-block-end: 0;
+}
+
+:where(table:not([data-date-picker] table)) :where([data-align="end"]) {
+  text-align: end;
+}
+
+:where(beautiful-table[data-dense]) {
+  --table-pad-x: var(--space-3);
+}
+
+:where(beautiful-table[data-dense]) > :where(table) > * > :where(tr) > :where(th, td) {
+  block-size: var(--table-row-height-dense);
+  padding-block: var(--space-1);
+}
+
+:where(beautiful-table[data-grid]) > :where(table) > * > :where(tr) > :where(th, td) + :where(th, td) {
+  border-inline-start: 1px solid var(--table-rule);
+}
+
+:where(beautiful-table[data-striped]) > :where(table) > :where(tbody) > :where(tr:nth-child(even)) {
+  background-color: var(--table-stripe);
+}
+
+/* A body with no rows says so, in one cell across every column. */
+:where(td[data-empty]) {
+  block-size: calc(2 * var(--table-row-height));
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+/*
+ * Without a pane, the outer columns line up with the text around the table. A striped table
+ * keeps its padding, so its tinted rows don't end at the text.
+ */
+:where(
+    beautiful-table[data-plain]:not([data-striped]),
+    dialog beautiful-table:not([data-striped]),
+    [popover] beautiful-table:not([data-striped]),
+    :is(beautiful-card, [data-card]) beautiful-table:not([data-striped]),
+    :not(beautiful-table)
+  )
+  > :where(table:not([data-date-picker] table))
+  :where(th, td) {
+  &:where(:first-child) {
+    padding-inline-start: 0;
+  }
+
+  &:where(:last-child) {
+    padding-inline-end: 0;
+  }
+}
+
+/* A row link reads as the row's name, not as a link in running text: the row is the link. */
+:where(a[data-row-link]) {
+  color: inherit;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+/* Hover only where there is a hovering pointer, so a tap doesn't leave a row lit. */
+@media (hover: hover) {
+  :where(tr:has(> :first-child > a[data-row-link])):where(:hover) {
+    background-color: var(--table-hover);
+  }
+}
+
+/*
+ * A sortable column's button: the header's own text, with an arrow after it. Not a Button: it
+ * has no fill, rim or height of its own, and it sits in the header's line.
+ */
+:where(th) > :where(button[data-sort]) {
+  /* A header's text doesn't shrink under a press, as a Button does. */
+  --button-press: none;
+
+  gap: var(--space-1);
+  min-height: 0;
+  margin-inline: calc(-1 * var(--space-1));
+  padding: 0 var(--space-1);
+  border: 0;
+  border-radius: var(--radius-xs);
+  color: inherit;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  font: inherit;
+  text-align: inherit;
+  white-space: nowrap;
+
+  &::before {
+    content: none;
+  }
+
+  /*
+   * The arrow: up for ascending, down for descending, and both, faint, for a column that can be
+   * sorted but isn't. A mask, so it takes the text's color.
+   */
+  &::after {
+    content: "";
+    flex: none;
+    inline-size: 1em;
+    block-size: 1em;
+    background-color: currentColor;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 6.5 3-3 3 3M5 9.5l3 3 3-3'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+    opacity: 0.5;
+    transition: opacity var(--motion-quick) var(--ease-out);
+  }
+}
+
+/*
+ * The column the rows are sorted by has the text color, so the eye finds it. On the button, not
+ * the cell, so the line under the header keeps one strength.
+ */
+:where(th[aria-sort="ascending"], th[aria-sort="descending"]) > :where(button[data-sort]) {
+  color: var(--color-text);
+
+  &::after {
+    opacity: 1;
+  }
+}
+
+:where(th[aria-sort="ascending"]) > :where(button[data-sort])::after {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 12.5v-9M4.5 7 8 3.5 11.5 7'/%3E%3C/svg%3E");
+}
+
+:where(th[aria-sort="descending"]) > :where(button[data-sort])::after {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 3.5v9M4.5 9 8 12.5 11.5 9'/%3E%3C/svg%3E");
+}
+
+@media (hover: hover) {
+  :where(th) > :where(button[data-sort]:hover) {
+    color: var(--color-text);
+  }
+}

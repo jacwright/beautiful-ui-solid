@@ -1,0 +1,130 @@
+/*
+ * Modern: a quiet, dense SaaS look, after Linear, Notion and Mercury. Opaque and flat. It is the
+ * default: it applies unless the root says data-theme="glass" or "classic". Lines do the work shadows do elsewhere: a card is a pane with a
+ * hairline edge and no shadow, and only what floats over the page (a popup, a dialog) casts one.
+ *
+ * Grays lean a touch cool and blue, as Linear's and Mercury's do, so ink, white and the cobalt
+ * accent sit together. Corners are tighter than classic's, controls a step shorter where the pointer
+ * is a mouse, labels medium rather than semibold, and motion is quick, with no overshoot.
+ *
+ * Built on classic: this layer sets only what differs. A finger keeps classic's 44px targets.
+ */
+:root:not([data-theme="glass"], [data-theme="classic"]) {
+  /*
+   * The system's own face, as Notion's app sets it: San Francisco on Apple's
+   * screens, Segoe UI on Windows, Roboto on Android. Nothing to download. Large type is a little
+   * tighter, as Notion's headings are.
+   */
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --tracking-tight: -0.015em;
+  --tracking-tighter: -0.025em;
+
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+
+  /* Light: a white page, panes a step off it. Dark: near black, panes a step up, as Linear's are. */
+  --color-canvas: light-dark(#f7f7f9, #0f0f11);
+  --color-raised: light-dark(#ffffff, #18181b);
+  --color-text: light-dark(#1c1d22, #ededf0);
+  --color-text-muted: light-dark(#5d5e6b, #9d9ea9);
+  --color-text-subtle: light-dark(#5d5e6b, #9d9ea9);
+  --color-border: light-dark(#e7e7ec, #2c2c32);
+  --color-hairline: light-dark(rgb(28 29 34 / 0.09), rgb(255 255 255 / 0.08));
+  --color-hairline-soft: light-dark(rgb(28 29 34 / 0.05), rgb(255 255 255 / 0.05));
+  /*
+   * A softer blue than classic's, as Notion's is: the fill is as light as white
+   * text on it allows, 4.5:1, the same in both modes. Text and the focus ring take a step deeper on
+   * a light page and a paler one on a dark page, each 4.5:1 or more.
+   */
+  --color-accent: light-dark(#236ac4, #6ea8f2);
+  --color-accent-fill: #2a76d2;
+  --color-neutral-fill: light-dark(#1c1d22, #3a3a42);
+
+  --weight-control: 500;
+  /* In dark mode a control is a step lighter than the pane it sits on, never darker. */
+  --control-fill: light-dark(#ffffff, #222227);
+  --control-edge: light-dark(#dcdce3, #37373f);
+  --control-pane-edge: var(--control-edge);
+
+  /* A Sidebar's current item is a flat tint of the text, with no edge or shadow. */
+  --nav-current-fill: color-mix(in oklab, var(--color-text) 7%, transparent);
+  --nav-current-edge: transparent;
+  --nav-current-shadow: none;
+
+  /* Cards and tables lie flat in the page: an edge and no shadow. The edge darkens under the pointer. */
+  --shadow-card: none;
+  --shadow-card-hover: none;
+  --card-edge: var(--color-border);
+  --card-edge-hover: light-dark(#cfcfd7, #42424b);
+  --table-edge: var(--color-border);
+
+  /* Fields: a white well with a crisp edge, no inner shade. */
+  --field-fill: light-dark(#ffffff, rgb(255 255 255 / 0.03));
+  --field-edge: var(--control-edge);
+  --field-edge-hover: light-dark(#b9b9c4, #52525c);
+  --field-shadow: none;
+
+  /*
+   * Grooves and tracks sink: a step darker than the pane in both modes, under a raised control
+   * that is a step lighter. A thumb keeps depth 1, the faintest, with a firmer edge.
+   */
+  --track-fill: light-dark(#e3e3e8, #2c2c32);
+  --track-shadow: none;
+  --toggle-groove: light-dark(#efeff2, #111114);
+  --thumb-edge: 0 0 0 1px light-dark(#c4c4ce, rgb(0 0 0 / 0.5));
+  /* A pressed Toggle button sinks: a faint shade under its top edge, and a lighter tint in dark mode. */
+  --toggle-shadow: inset 0 1px 2px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.35));
+  --toggle-tint-dark: 12%;
+
+  /* A Tree's rows are muted text that darkens under the pointer and when picked, on a soft gray. */
+  --tree-muted: 1;
+  --tree-selected-tint: 8%;
+
+  /* Buttons are flat: an edge and a fill, no shadow, as in Notion and Linear. */
+  --control-shadow: none;
+
+  /* A danger menu item is red text on the same gray tint as any item. */
+  --item-danger-tint: color-mix(in oklab, var(--color-text) 9%, transparent);
+  --item-danger-lit: 0%;
+  /* A paler red in dark mode, so it keeps 4.5:1 on that gray tint (5:1), as classic's does on its own. */
+  --color-danger: light-dark(#c91f3a, #ff6672);
+
+  /* Tooltips are a dark chip in both modes, a step lighter than the page in dark. */
+  --tooltip-fill: light-dark(#1f2024, #2e2e35);
+  --tooltip-ink: #f4f4f6;
+  --tooltip-edge: transparent;
+  --tooltip-shortcut: #a3a3ad;
+
+  /* A field's focus ring lies over its border; a button's stands off it (base.css). */
+  --field-focus-offset: -1px;
+
+  /* Popups grow into place from where they open, a little further than classic's. */
+  --popup-scale: 0.92;
+
+  --backdrop-fill: light-dark(rgb(15 15 20 / 0.24), rgb(0 0 0 / 0.6));
+
+  --motion-enter: 200ms;
+  --motion-exit: 140ms;
+  --motion-quick: 100ms;
+  --motion-popup-enter: 150ms;
+  --motion-popup-exit: 100ms;
+  --ease-spring: var(--ease-out);
+}
+
+/* A mouse gets Linear's and Mercury's 32px controls; a finger keeps the 44px targets in tokens.css. */
+@media (pointer: fine) {
+  :root:not([data-theme="glass"], [data-theme="classic"]) {
+    --control-height: 2rem;
+    --item-height: 1.875rem;
+    --accordion-row: 2.25rem;
+    --table-row-height: 2.5rem;
+    /* Notion's sidebar: 28px rows, 8px round its sections, the icon close to its label. */
+    --sidebar-pad: var(--space-2);
+    --sidebar-item-height: 1.75rem;
+    --sidebar-item-gap: var(--space-2);
+    --item-gap: 1px;
+    /* A chip sits inside a 32px Tag field with room around it. */
+    --chip-height: 1.5rem;
+  }
+}

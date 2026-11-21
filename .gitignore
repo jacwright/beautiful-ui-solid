@@ -1,0 +1,15 @@
+node_modules/
+dist/
+dist-e2e/
+.wrangler/
+# Playwright's output from a failed run.
+test-results/
+playwright-report/
+.dev.vars
+*.log
+.DS_Store
+
+# pnpm is the package manager (see packageManager in package.json).
+# npm and yarn lockfiles are accidents; they resolve a different tree than CI.
+package-lock.json
+yarn.lock

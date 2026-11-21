@@ -1,0 +1,143 @@
+/*
+ * Description list: the native <dl>, a list of terms (<dt>) and their details (<dd>), such as
+ * a site's settings or an order's summary. The terms and details sit straight in the list. HTML
+ * allows only a <div> around a pair, and the kit writes no <div>, so there is no row element and
+ * a wrapped pair isn't styled.
+ *
+ *   data-size: sm, base, as Text's. Left out, the list takes the size of where it sits.
+ *
+ * Wide enough, each term sits in a column beside its details, with a hairline between rows. On
+ * a narrow list, such as one on a phone, the details stack under their term. The list measures
+ * its own width, not the screen's, so a list in a dialog or a sidebar stacks when it is narrow.
+ *
+ * How: a container query would need container-type on the <dl>, and that collapses a list
+ * sized by its content, such as one in a Popover, to nothing. So the list is a wrapping flex
+ * row, and every value that differs between the layouts is worked out from 100%, the list's own
+ * width (flex-basis, padding and margin percentages all resolve against it). --_past is how far
+ * the list is past 24rem, times 999: hugely positive when wide, hugely negative when narrow.
+ *
+ *   clamp(0px, var(--_past), x)       is x on a wide list, 0 on a narrow one.
+ *   max(x, calc(var(--_past) * -1))   is x on a wide list, and huge on a narrow one, so the
+ *                                     item takes a line of its own.
+ *
+ * Every selector sits in :where(), so its specificity is 0, as in text.css. The list sets no
+ * margin, and its first and last rows are flush with its edges: the space around it belongs to
+ * what holds it.
+ */
+:where(dl) {
+  /* 24rem keeps two columns in a desktop dialog and stacks on a phone. */
+  --_past: calc((100% - 24rem) * 999);
+
+  display: flex;
+  flex-wrap: wrap;
+  /* The hairlines span the list (dt::before). */
+  position: relative;
+}
+
+:where(dt, dd) {
+  min-width: 0;
+  /* A long URL or id breaks rather than overflowing its column. break-word, unlike anywhere, keeps whole words in the list's min-content width. */
+  overflow-wrap: break-word;
+}
+
+/* The term is the quiet label. A surface such as a glass Dialog sets a stronger --color-text-muted. */
+:where(dt) {
+  flex: 0 1 max(var(--term-width), calc(var(--_past) * -1));
+  /* No bottom padding: the details' own sets the row's height, in both layouts. */
+  padding-block-start: var(--space-3);
+  padding-inline-end: clamp(0px, var(--_past), var(--space-4));
+  color: var(--color-text-muted);
+}
+
+/*
+ * The hairline above each row, across the whole list in both layouts. It sits where the term
+ * would start, then its margin lifts it over the term's top padding.
+ */
+:where(dt)::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  block-size: var(--hairline-width);
+  margin-block-start: calc(var(--space-3) * -1);
+  /* The hairline mixes currentColor: the full text color, not the term's muted one. */
+  color: var(--color-text);
+  background: var(--color-hairline);
+  /* Glass's lit edge, under the line, as a Divider's. Classic's is transparent. */
+  box-shadow: 0 var(--hairline-width) var(--hairline-lit);
+}
+
+/* The rest of the row, less 1px so rounding never pushes it onto a line of its own. */
+:where(dd) {
+  flex: 1 1 max(calc(100% - var(--term-width) - 1px), calc(var(--_past) * -1));
+  padding-block: calc(var(--space-1) + clamp(0px, var(--_past), var(--space-2))) var(--space-3);
+}
+
+/* A term with more than one detail: the details sit close together, as one value, under the first. */
+:where(dd:has(+ dd)) {
+  padding-block-end: 0;
+}
+
+:where(dd + dd) {
+  margin-inline-start: clamp(0px, var(--_past), var(--term-width));
+  padding-block-start: var(--space-1);
+}
+
+/*
+ * Several terms that share their details, such as two names for one thing: each term after the
+ * first sits under it in the term column, with no line between them, and the details sit beside the last. The margin fills the rest
+ * of a wide list's line, so the next term starts a line of its own.
+ */
+:where(dt:has(+ dt)) {
+  margin-inline-end: clamp(0px, var(--_past), calc(100% - var(--term-width)));
+}
+
+:where(dt + dt) {
+  padding-block-start: var(--space-1);
+}
+
+:where(dt + dt)::before {
+  content: none;
+}
+
+/* The details beside the last of them start level with it. */
+:where(dt + dt + dd) {
+  padding-block-start: var(--space-1);
+}
+
+/*
+ * An empty detail shows a quiet dash, read as "None", so the row doesn't look broken. Empty means
+ * nothing at all: a space or a line break inside the <dd> isn't :empty.
+ */
+:where(dd:empty)::before {
+  content: "—";
+  content: "—" / "None";
+  color: var(--color-text-muted);
+}
+
+/* The first row is flush with the top, with no line above it. */
+:where(dl > dt:first-child) {
+  padding-block-start: 0;
+}
+
+:where(dl > dt:first-child)::before {
+  content: none;
+}
+
+:where(dl > dt:first-child + dd) {
+  padding-block-start: clamp(0px, calc(var(--_past) * -1), var(--space-1));
+}
+
+/* The last row is flush with the bottom. */
+:where(dl > dd:last-child) {
+  padding-block-end: 0;
+}
+
+:where(dl[data-size="sm"]) {
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+}
+
+:where(dl[data-size="base"]) {
+  font-size: var(--text-base);
+  line-height: var(--leading);
+}

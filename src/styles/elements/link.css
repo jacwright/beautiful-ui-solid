@@ -1,0 +1,55 @@
+/*
+ * Link: a styled native <a href>. One look, in text or on its own, and the base for links in a
+ * Navbar, a Sidebar and Pagination. An <a> without href isn't a link, and a link styled as a
+ * Button (a[data-button]) is Button's, so neither is styled here.
+ *
+ *   data-color: accent (the default), neutral. Neutral takes the color of the text around it.
+ *
+ * The underline is always there, so a link never depends on color alone. It sits at 40% of the
+ * link's color and turns solid on hover and press. target="_blank" adds an arrow, and tells a
+ * screen reader the link opens a new tab, with no extra node.
+ *
+ * Every selector sits in :where(), so its specificity is 0, as in button.css.
+ */
+:where(a:any-link:not([data-button])) {
+  color: var(--color-accent);
+  text-decoration-line: underline;
+  text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
+  text-decoration-thickness: max(1px, 0.0625em);
+  text-underline-offset: 0.2em;
+  /* A link that wraps keeps its rounding (--radius-xs, from base.css) and its ring on each line. */
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  -webkit-tap-highlight-color: transparent;
+  transition: text-decoration-color var(--motion-quick) var(--ease-out);
+}
+
+:where(a:any-link:not([data-button])[data-color="neutral"]) {
+  color: inherit;
+}
+
+:where(a:any-link:not([data-button]):active) {
+  text-decoration-color: currentColor;
+}
+
+/* Hover only where there is a hovering pointer, so a tap doesn't leave the underline solid. */
+@media (hover: hover) {
+  :where(a:any-link:not([data-button]):hover) {
+    text-decoration-color: currentColor;
+  }
+}
+
+/*
+ * A link that opens a new tab: an arrow drawn with a mask, in the link's color, outside the
+ * underline. Its content is a word joiner, so the line can't break between the last word and
+ * the arrow; the padding is the arrow's room. The text after the slash is what a screen reader
+ * reads for it. A browser without that syntax keeps the plain arrow.
+ */
+:where(a:any-link:not([data-button])[target="_blank"])::after {
+  content: "\2060";
+  content: "\2060" / " (opens in a new tab)";
+  padding-inline-start: 0.9em;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 11 11 5M6 5h5v5'/%3E%3C/svg%3E")
+    right center / 0.75em no-repeat;
+}

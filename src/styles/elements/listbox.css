@@ -1,0 +1,247 @@
+/*
+ * Listbox: a custom select. A button that looks like a field shows the chosen value, and opens a
+ * Popover panel that holds the list of options:
+ *
+ *   <button aria-haspopup="listbox" commandfor="…" command="toggle-popover">
+ *     <beautiful-listbox-value>value</beautiful-listbox-value>
+ *   </button>
+ *   <beautiful-popover popover>
+ *     <beautiful-listbox role="listbox" tabindex="-1">
+ *       <beautiful-listbox-option role="option" aria-selected>…</beautiful-listbox-option>…
+ *     </beautiful-listbox>
+ *   </beautiful-popover>
+ *
+ * The selectors read the roles, so the elements' names are only hooks.
+ *
+ * The panel is Popover's pane, with its rim, and the listbox inside it scrolls, so the rim stays
+ * put. An option is item.css's row with a check before it that shows when it is selected. The
+ * option the keys are on has data-active (options.ts), and takes the tint.
+ *
+ * Every selector sits in :where(), so its specificity is 0, and this file comes after button.css,
+ * popover.css and item.css, which it restyles.
+ */
+
+/* The button: a field (input.css's well), not a Button, with the up and down chevrons at its end. */
+:where(button[aria-haspopup="listbox"]) {
+  --button-press: none;
+
+  display: flex;
+  justify-content: flex-start;
+  inline-size: 100%;
+  min-inline-size: 0;
+  block-size: var(--control-height);
+  /* The border is part of the height, so the padding gives up 1px on each side. The end makes room for the chevrons. */
+  padding: calc(var(--space-2) - 1px) calc(var(--control-pad-x) * 2 + var(--control-icon) - 1px) calc(var(--space-2) - 1px)
+    calc(var(--control-pad-x) - 1px);
+  border-color: var(--field-edge);
+  color: var(--color-text);
+  background-color: var(--field-fill);
+  background-image: none;
+  box-shadow: var(--field-shadow);
+  font-weight: 400;
+  line-height: var(--leading-sm);
+  text-align: start;
+  cursor: default;
+
+  /* No Button rim: a field is a well. */
+  &::before {
+    content: none;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: calc(var(--control-pad-x) - 1px);
+    width: var(--control-icon);
+    margin-block: auto;
+    height: var(--control-icon);
+    background-color: var(--color-text-muted);
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 7.5 3-3 3 3M7 12.5l3 3 3-3'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+    pointer-events: none;
+  }
+
+  @media (hover: hover) {
+    &:where(:hover:not(:disabled)) {
+      border-color: var(--field-edge-hover);
+    }
+  }
+
+  /* After hover, so an invalid field keeps its danger edge under the pointer. */
+  &:where([aria-invalid="true"]) {
+    border-color: var(--color-danger);
+  }
+
+  /* The value: one line, cut short with an ellipsis. An option's icon comes with it. */
+  > :where(beautiful-listbox-value) {
+    display: block;
+    flex: 1;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    > :where(svg) {
+      display: inline-block;
+      width: var(--control-icon);
+      height: var(--control-icon);
+      margin-inline-end: var(--space-2);
+      color: var(--color-text-muted);
+      vertical-align: -0.1875em;
+    }
+
+    /* A description belongs to the list, not the field. */
+    > :where(small) {
+      display: none;
+    }
+  }
+
+  /* Nothing chosen yet: the placeholder, muted as an Input's is. */
+  > :where(beautiful-listbox-value[data-placeholder]) {
+    color: var(--color-text-muted);
+  }
+}
+
+/* The panel: Popover's pane, at least as wide as the button, with the scrolling list filling it. */
+:where([popover]:has(> [role="listbox"])) {
+  gap: 0;
+  padding: 0;
+  font-size: var(--control-font-size);
+}
+
+@supports (width: anchor-size(width)) {
+  :where([popover]:has(> [role="listbox"])) {
+    --popover-width: max(20rem, anchor-size(width));
+
+    min-width: anchor-size(width);
+  }
+}
+
+:where([role="listbox"]) {
+  /* Eight and a half options: the half one shows there are more. */
+  --listbox-max-height: calc(8.5 * var(--item-height) + var(--space-1));
+
+  display: block;
+  /* The options' offsetTop is measured from here, to scroll the lit one into view. */
+  position: relative;
+  max-block-size: min(var(--listbox-max-height), 40dvh);
+  padding: var(--space-1);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* Inside the panel's border, so the scrollbar keeps to its corners. */
+  border-radius: calc(var(--radius-lg) - 1px);
+  scrollbar-width: thin;
+  /* The listbox takes focus. Its lit option shows where the keys are. */
+  outline: none;
+}
+
+/*
+ * An option: an optional icon, the label, a description, and the check at the end, which shows
+ * when it is selected. The check sits at the end so no empty column waits before the labels.
+ * Every row keeps the check's column, so a long label wraps short of it.
+ *
+ * The description goes under the label, or with data-descriptions="inline" on the list, after it
+ * on the same line, cut short with an ellipsis: the one for short ones, such as a @handle.
+ */
+:where([role="listbox"]) :where([role="option"]) {
+  grid-template-columns: 1fr var(--control-icon);
+  gap: 0 var(--space-2);
+  user-select: none;
+
+  &::after {
+    content: "";
+    grid-row: 1;
+    grid-column: -2 / -1;
+    width: var(--control-icon);
+    height: var(--control-icon);
+    background-color: currentColor;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4.5 10.5 3.5 3.5 7.5-8'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+    visibility: hidden;
+  }
+
+  &:where([aria-selected="true"])::after {
+    visibility: visible;
+  }
+
+  > :where(svg) {
+    grid-column: 1;
+  }
+
+  > :where(small) {
+    grid-column: 1 / -2;
+  }
+}
+
+/* With a description under the label, the check sits in the middle of both lines. */
+:where([role="listbox"]) :where([role="option"]:has(> small))::after {
+  grid-row: 1 / span 2;
+}
+
+/* With an icon, a column for it comes first. */
+:where([role="listbox"]) :where([role="option"]:has(> svg)) {
+  grid-template-columns: var(--control-icon) 1fr var(--control-icon);
+
+  > :where(small) {
+    grid-column: 2 / -2;
+  }
+}
+
+/*
+ * Descriptions on the label's line: the label takes what it needs, up to two thirds of the row so a
+ * long one wraps and leaves the description room, and the description the rest. Baselines line up.
+ */
+:where([role="listbox"][data-descriptions="inline"]) :where([role="option"]) {
+  grid-template-columns: fit-content(66%) minmax(0, 1fr) var(--control-icon);
+  align-items: baseline;
+
+  &::after {
+    grid-row: 1;
+    align-self: center;
+  }
+
+  > :where(small) {
+    grid-row: 1;
+    grid-column: -3 / -2;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+:where([role="listbox"][data-descriptions="inline"]) :where([role="option"]:has(> svg)) {
+  grid-template-columns: var(--control-icon) fit-content(66%) minmax(0, 1fr) var(--control-icon);
+
+  > :where(svg) {
+    align-self: center;
+  }
+}
+
+:where([role="listbox"]) :where([role="option"][data-active]) {
+  background-color: var(--item-tint);
+}
+
+/* An option a Combobox's filter hides. item.css's grid would show it. */
+:where([role="listbox"]) :where([role="option"][hidden]) {
+  display: none;
+}
+
+/* A disabled option: faded, as a disabled Button is, and skipped by the keys and the pointer. */
+:where([role="listbox"]) :where([role="option"][aria-disabled="true"]) {
+  opacity: 0.5;
+}
+
+/* Forced colors drop the tint and the mask's fill, so the lit option takes an outline and the check its own color. */
+@media (forced-colors: active) {
+  :where([role="listbox"]) :where([role="option"][data-active]) {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  :where([role="listbox"]) :where([role="option"])::after,
+  :where(button[aria-haspopup="listbox"])::after {
+    background-color: CanvasText;
+  }
+}

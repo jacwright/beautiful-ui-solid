@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Command palette harness</title>
+  </head>
+  <body>
+    <!-- The Command palette docs examples, for tests/command-palette.spec.ts. Not part of the site build. -->
+    <main id="app"></main>
+    <script>
+      // ?theme=classic&mode=dark, as the docs site's switches set them.
+      const query = new URLSearchParams(location.search);
+      document.documentElement.dataset.theme = query.get("theme") ?? "glass";
+      document.documentElement.dataset.mode = query.get("mode") ?? "light";
+    </script>
+    <script type="module" src="./command-palette.tsx"></script>
+  </body>
+</html>

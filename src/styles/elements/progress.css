@@ -1,0 +1,156 @@
+/*
+ * Progress: a native <progress>, drawn as a rounded bar that fills from the start of the line.
+ *
+ * With a value it is determinate: the fill is value / max of the track, and grows smoothly to a
+ * new value. With no value it is indeterminate: a glow sweeps along the track until a value comes,
+ * and under reduced motion the track pulses softly instead of moving.
+ *
+ * In a <beautiful-field> it takes the field's label, its value text at the end of the label's line
+ * (<output aria-hidden="true">, as a Range's), and a description or error under the bar. An error turns
+ * the fill the danger color, where the bar stopped.
+ *
+ * The browser draws the fill as a pseudo-element: ::-webkit-progress-value in Chrome and Safari,
+ * ::-moz-progress-bar in Firefox. Each gets its own rule, because one selector a browser doesn't
+ * know drops every selector in its list. Every rule sits in :where(), so its specificity is 0, as
+ * in button.css.
+ */
+@property --progress-pulse {
+  syntax: "<percentage>";
+  inherits: false;
+  /* Where the breathing sits when nothing animates it: a steady tint, not an empty track. */
+  initial-value: 25%;
+}
+
+:where(progress) {
+  /*
+   * The fill's color: a Range's value, the accent a primary Button is filled with, at the same
+   * opacity on glass. An error in its field turns it danger.
+   */
+  --progress-color: var(--track-value);
+
+  display: block;
+  inline-size: 100%;
+  block-size: var(--progress-height);
+  border: 0;
+  border-radius: var(--radius-full);
+  /* The track is the element's own background, so an indeterminate sweep can be drawn on it too. */
+  background: var(--track-fill);
+  box-shadow: var(--track-shadow);
+  backdrop-filter: blur(var(--control-blur)) saturate(var(--control-saturate));
+  color: var(--progress-color);
+  appearance: none;
+  overflow: hidden;
+}
+
+:where(progress)::-webkit-progress-bar {
+  background: transparent;
+}
+
+:where(progress)::-webkit-progress-value {
+  border-radius: var(--radius-full);
+  background: var(--progress-sheen), var(--progress-color);
+  transition: inline-size var(--motion-enter) var(--ease-out);
+}
+
+:where(progress)::-moz-progress-bar {
+  border-radius: var(--radius-full);
+  background: var(--progress-sheen), var(--progress-color);
+}
+
+/*
+ * Indeterminate: a glow a little under half the track's length sweeps from start to end. Over a
+ * third of it fades in at each end, so it reads as light moving through the bar, with only its
+ * middle solid. On glass a light from the top rides with it, the reverse of the fill's, and fades
+ * out toward the ends too: a radial gradient as wide as the sweep. The browser's own fill is hidden.
+ * The sweep starts and ends just off the track: at 40% wide, -66.67% and 166.67% put its edge
+ * one width outside each end.
+ */
+:where(progress:indeterminate) {
+  background:
+    var(--progress-sweep-sheen) -66.67% 0 / 40% 100% no-repeat,
+    linear-gradient(to right, transparent, var(--progress-color) 35%, var(--progress-color) 65%, transparent) -66.67% 0 /
+      40% 100% no-repeat,
+    var(--track-fill);
+  animation: progress-sweep var(--motion-sweep) var(--ease-in-out) infinite;
+}
+
+:where(progress:indeterminate:dir(rtl)) {
+  animation-direction: reverse;
+}
+
+:where(progress:indeterminate)::-webkit-progress-value {
+  background: transparent;
+}
+
+:where(progress:indeterminate)::-moz-progress-bar {
+  background: transparent;
+}
+
+@keyframes progress-sweep {
+  to {
+    background-position-x: 166.67%, 166.67%;
+  }
+}
+
+/* Reduced motion: nothing moves. The whole track breathes between its own tint and the fill's. */
+@media (prefers-reduced-motion: reduce) {
+  :where(progress:indeterminate) {
+    background: color-mix(in oklab, var(--progress-color) var(--progress-pulse), var(--track-fill));
+    animation: progress-pulse calc(var(--motion-sweep) * 1.25) var(--ease-in-out) infinite alternate;
+  }
+}
+
+@keyframes progress-pulse {
+  from {
+    --progress-pulse: 10%;
+  }
+
+  to {
+    --progress-pulse: 45%;
+  }
+}
+
+/*
+ * In a field: the label on the first line with the value text at its end, then the bar, then a
+ * description or an error. A description may also sit between the label and the bar. A Meter
+ * (meter.css) is laid out the same way, so this holds for a <meter> too.
+ */
+beautiful-field:has(> :is(progress, meter)) {
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--space-3);
+
+  > * {
+    grid-column: 1 / -1;
+  }
+
+  > label {
+    grid-column: 1;
+  }
+
+  > :where(output) {
+    grid-area: 1 / 2;
+    align-self: end;
+    margin-block-start: 0;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  > :where(progress, meter) {
+    margin-block-start: var(--space-2);
+  }
+
+  > :where(:is(progress, meter, output) + p) {
+    margin-block-start: var(--space-2);
+  }
+}
+
+/* It stopped: the fill turns danger where it is, and the error under it says why. */
+:where(beautiful-field:has(> p[data-error])) > :where(progress) {
+  --progress-color: color-mix(in srgb, var(--color-danger-fill) var(--control-primary-opacity), transparent);
+}
+
+/* An error stops the sweep too: an indeterminate bar that failed shows an empty track. */
+:where(beautiful-field:has(> p[data-error])) > :where(progress:indeterminate) {
+  background: var(--track-fill);
+  animation: none;
+}

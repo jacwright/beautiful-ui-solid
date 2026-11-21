@@ -1,0 +1,60 @@
+/*
+ * Text: body copy on native <p>, and the inline elements it holds, <strong> and <code>.
+ *
+ *   data-size: sm, base, lg. Left out, the paragraph takes the size of where it sits: 16px on
+ *              the page, 14px in a dialog's body.
+ *   data-tone: muted, for secondary copy. Left out, it is the text color.
+ *
+ * Every selector sits in :where(), so its specificity is 0, as in button.css. A component that
+ * owns its own <p>, such as Dialog's description, styles it with any selector.
+ */
+:where(p) {
+  /* Avoids a lone word on the last line, where the browser supports it. */
+  text-wrap: pretty;
+}
+
+:where(p[data-size="sm"]) {
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+}
+
+:where(p[data-size="base"]) {
+  font-size: var(--text-base);
+  line-height: var(--leading);
+}
+
+:where(p[data-size="lg"]) {
+  font-size: var(--text-lg);
+  line-height: var(--leading-lg);
+}
+
+/* A surface such as a glass Dialog sets a stronger --color-text-muted, so muted text keeps its contrast there. */
+:where(p[data-tone="muted"]) {
+  color: var(--color-text-muted);
+}
+
+/* Strong: heavier, and in muted text the full text color, so it stands out. */
+:where(strong) {
+  font-weight: var(--weight-strong);
+}
+
+:where(p[data-tone="muted"] strong) {
+  color: var(--color-text);
+}
+
+/*
+ * Code inside text: a mono word on a faint tint of the text's own color, so it reads in any
+ * theme, mode and tone. A code block (<pre><code>) is left alone.
+ */
+:where(:not(pre) > code) {
+  padding: 0 var(--space-1);
+  border: 1px solid color-mix(in oklab, currentColor 14%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, currentColor 6%, transparent);
+  /* Mono letters look larger than sans at the same size. em keeps it in step with sm and lg text. */
+  font-size: 0.875em;
+  /* A long path or URL breaks rather than overflowing, and each line keeps its edge. */
+  overflow-wrap: anywhere;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}

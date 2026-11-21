@@ -1,0 +1,77 @@
+/*
+ * Command palette: a Dialog (dialog.css) holding a search box and the list of actions under it:
+ *   <dialog data-command-palette>
+ *     <input role="combobox" aria-expanded="true" aria-controls="…">
+ *     <beautiful-command-palette-list role="listbox">
+ *       <beautiful-command-palette-group role="group"><header>Editor</header>
+ *         <beautiful-command-palette-option role="option">Bold <kbd>⌘B</kbd></…>…
+ * The box is input.css's field. An option is item.css's row, as Listbox's is, with the scope as a
+ * <small> after the label while searching and the keys at the end in place of Listbox's check. A
+ * section's heading is Dropdown's. The list scrolls past --command-palette-rows rows. Every selector
+ * sits in :where(), so its specificity is 0, and this file comes after listbox.css, which it restyles.
+ */
+:where(dialog[data-command-palette]) {
+  > :where(input[role="combobox"]) {
+    inline-size: 100%;
+  }
+
+  /* No gap under a box with nothing listed: the status says so instead. */
+  > :where([role="listbox"]) {
+    display: flex;
+    flex-direction: column;
+    max-block-size: calc(var(--item-height) * var(--command-palette-rows));
+    margin-block-start: var(--space-2);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
+  > :where(p[role="status"]) {
+    margin-block: var(--space-3) 0;
+    color: var(--color-text-muted);
+  }
+
+  /* Empty, it takes no room: it stays on the page so a screen reader hears it change. */
+  > :where(p[role="status"]:empty) {
+    margin: 0;
+  }
+}
+
+:where(beautiful-command-palette-group) {
+  display: flex;
+  flex-direction: column;
+}
+
+:where([data-command-palette] [role="group"]) > :where(header) {
+  padding: var(--space-2) var(--control-pad-x) var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: var(--leading-sm);
+}
+
+:where([data-command-palette] [role="listbox"]) :where([role="option"]) {
+  grid-template-columns: auto 1fr auto;
+
+  &::after {
+    content: none;
+  }
+
+  /* The scope, after the label on the same line, while searching. */
+  > :where(small) {
+    grid-row: 1;
+    grid-column: 2;
+    color: var(--item-description);
+    font-size: var(--text-xs);
+  }
+
+  > :where(kbd) {
+    grid-row: 1;
+    grid-column: 3;
+    padding-inline-start: var(--space-4);
+    color: var(--color-text-muted);
+    font-family: inherit;
+    font-size: inherit;
+    white-space: nowrap;
+  }
+}

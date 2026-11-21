@@ -1,0 +1,129 @@
+/*
+ * Switch: a native <input type="checkbox" role="switch">, drawn with appearance: none. The input is
+ * the track, and its background draws the thumb, so the switch is one element with no extra node,
+ * and works with no JS: a click, a tap on its label, and Space all flip it, and a form sends it as
+ * a checkbox.
+ *
+ *   data-color: accent (the default), neutral. The track's color when it is on.
+ *
+ * Off, the track is a well, as a field is (the --field-* tokens), tinted so it shows on any
+ * surface. On, it fills with the color, as a primary Button does, glass included. The thumb is a
+ * white disc in both, with a soft shade under it, and slides across with a little spring.
+ *
+ * The thumb is two radial gradients (a disc, and its shade 1px lower) the size of the content box's
+ * height, so the padding is the gap around it. Pseudo-elements would need a second node: Firefox
+ * draws none on an <input>.
+ *
+ * Every rule sits in :where(), so its specificity is 0, as in button.css.
+ */
+:where(input[type="checkbox"][role="switch"]) {
+  --switch-on: var(--color-accent-fill);
+  --switch-off: color-mix(in oklab, var(--color-text) 18%, var(--field-fill));
+  --switch-thumb: #ffffff;
+  /* The track's height less its border and inset on each side. */
+  --switch-thumb-size: calc(var(--switch-height) - 2px - 2 * var(--switch-inset));
+  --switch-thumb-at: 0%;
+
+  appearance: none;
+  flex: none;
+  display: inline-block;
+  vertical-align: middle;
+  inline-size: var(--switch-width);
+  block-size: var(--switch-height);
+  padding: var(--switch-inset);
+  border: 1px solid var(--field-edge);
+  border-radius: var(--radius-full);
+  background-color: var(--switch-off);
+  background-image:
+    radial-gradient(closest-side, var(--switch-thumb) calc(100% - 1px), transparent),
+    radial-gradient(closest-side, light-dark(rgb(0 0 0 / 0.22), rgb(0 0 0 / 0.5)) 55%, transparent);
+  background-origin: content-box;
+  background-size: var(--switch-thumb-size) var(--switch-thumb-size);
+  background-repeat: no-repeat;
+  background-position:
+    var(--switch-thumb-at) 50%,
+    var(--switch-thumb-at) calc(50% + 1px);
+  backdrop-filter: blur(var(--control-blur)) saturate(var(--control-saturate));
+  box-shadow: var(--field-shadow);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--motion-quick) var(--ease-out),
+    border-color var(--motion-quick) var(--ease-out),
+    background-position var(--motion-slide) var(--ease-spring);
+
+  &:where([data-color="neutral"]) {
+    --switch-on: var(--color-neutral-fill);
+  }
+
+  /* On: the thumb at the end, and the track in the color. Glass lets some of the page through. */
+  &:where(:checked) {
+    --switch-thumb-at: 100%;
+
+    border-color: color-mix(in srgb, color-mix(in oklab, var(--switch-on), #000 12%) var(--control-primary-opacity), transparent);
+    background-color: color-mix(in srgb, var(--switch-on) var(--control-primary-opacity), transparent);
+  }
+
+  /* The thumb starts at the start of the line, which is the right in a right-to-left page. */
+  &:where(:dir(rtl)) {
+    --switch-thumb-at: 100%;
+  }
+
+  &:where(:dir(rtl):checked) {
+    --switch-thumb-at: 0%;
+  }
+
+  /* Hover only where there is a hovering pointer, so a tap doesn't leave a switch lit. Darker in both states. */
+  @media (hover: hover) {
+    &:where(:hover:not(:disabled)) {
+      border-color: var(--field-edge-hover);
+      background-color: color-mix(in oklab, var(--color-text) 6%, var(--switch-off));
+    }
+
+    &:where(:hover:not(:disabled):checked) {
+      border-color: color-mix(in srgb, color-mix(in oklab, var(--switch-on), #000 20%) var(--control-primary-opacity), transparent);
+      background-color: color-mix(in srgb, color-mix(in oklab, var(--switch-on), #000 8%) var(--control-primary-opacity), transparent);
+    }
+  }
+
+  /* After hover, so an invalid switch keeps its danger edge under the pointer. */
+  &:where([aria-invalid="true"]) {
+    border-color: var(--color-danger);
+  }
+
+  &:where(:disabled) {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  /*
+   * Windows' high contrast themes drop backgrounds, and with them the thumb. The switch draws in
+   * the theme's own colors instead: an outlined track, and the highlight color when it is on.
+   */
+  @media (forced-colors: active) {
+    forced-color-adjust: none;
+    --switch-thumb: CanvasText;
+
+    /* The thumb only: a shadow's black would show on a dark Canvas. */
+    background-image: radial-gradient(closest-side, var(--switch-thumb) calc(100% - 1px), transparent);
+
+    border-color: CanvasText;
+    background-color: Canvas;
+
+    &:where(:checked) {
+      --switch-thumb: HighlightText;
+
+      border-color: Highlight;
+      background-color: Highlight;
+    }
+
+    &:where(:disabled) {
+      --switch-thumb: GrayText;
+
+      border-color: GrayText;
+      background-color: Canvas;
+      opacity: 1;
+    }
+  }
+}

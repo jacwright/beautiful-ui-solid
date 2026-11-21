@@ -1,0 +1,34 @@
+/*
+ * Shortcut sheet: a Dialog (dialog.css) with a Description list (description-list.css) per scope,
+ * each action's label beside its keys. The keys are keycaps: a hairline box in the monospace face,
+ * as a person sees them printed on a keyboard. Every selector sits in :where(), so its specificity
+ * is 0, as in text.css.
+ *
+ * While the person changes keys (data-editing), each row's keys are a Button holding the keycap,
+ * then its Reset or Remove, in a row that starts level with the term.
+ */
+:where(dialog[data-shortcut-sheet]) :where(dd) :where(kbd) {
+  display: inline-block;
+  padding-inline: var(--space-1);
+  border: var(--hairline-width) solid var(--color-hairline);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: inherit;
+  white-space: nowrap;
+}
+
+:where(dialog[data-shortcut-sheet][data-editing]) :where(dd) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  /* The button is taller than a line of text, so it starts higher and its label sits level with the term's. */
+  padding-block-start: var(--space-1);
+}
+
+/* The keys' button is as wide as the longest keys it usually holds, so Remove and Reset stay put. */
+:where(dialog[data-shortcut-sheet]) :where(button[data-shortcut-keys]) {
+  min-inline-size: var(--shortcut-keys-width);
+}
+

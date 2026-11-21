@@ -1,0 +1,89 @@
+/* The kit's stylesheet. Later layers win, whatever their selectors. */
+@layer reset, tokens, base, elements, theme;
+
+@import "./reset.css" layer(reset);
+@import "./tokens.css" layer(tokens);
+@import "./base.css" layer(base);
+/* Before the components that paint with the tints: Badge and Chip. */
+@import "./tints.css" layer(elements);
+@import "./elements/text.css" layer(elements);
+@import "./elements/heading.css" layer(elements);
+@import "./elements/link.css" layer(elements);
+@import "./elements/divider.css" layer(elements);
+@import "./elements/description-list.css" layer(elements);
+@import "./elements/button.css" layer(elements);
+@import "./elements/toggle-button.css" layer(elements);
+/* After button.css: a button that holds only an avatar takes its shape. */
+@import "./elements/avatar.css" layer(elements);
+@import "./elements/button-group.css" layer(elements);
+/* After button.css and toggle-button.css: a toggle group restyles its buttons as segments of a groove. */
+@import "./elements/toggle-group.css" layer(elements);
+@import "./elements/surface.css" layer(elements);
+@import "./elements/elevation.css" layer(elements);
+@import "./elements/callout.css" layer(elements);
+@import "./elements/dialog.css" layer(elements);
+/* After dialog.css and description-list.css: the sheet is a dialog of lists. */
+@import "./elements/shortcut-sheet.css" layer(elements);
+/* After dialog.css: a drawer is a dialog that slides in from an edge. */
+@import "./elements/drawer.css" layer(elements);
+@import "./elements/auth-layout.css" layer(elements);
+/* After link.css: a card's link restyles it. */
+@import "./elements/card.css" layer(elements);
+@import "./elements/focus-ring.css" layer(elements);
+@import "./elements/fieldset.css" layer(elements);
+@import "./elements/input.css" layer(elements);
+@import "./elements/radio.css" layer(elements);
+@import "./elements/range.css" layer(elements);
+/* After input.css: a textarea is an input's well that grows. */
+@import "./elements/textarea.css" layer(elements);
+@import "./elements/select.css" layer(elements);
+@import "./elements/checkbox.css" layer(elements);
+@import "./elements/switch.css" layer(elements);
+@import "./elements/popover.css" layer(elements);
+/* After popover.css: the calendar restyles its panel. */
+@import "./elements/date-picker.css" layer(elements);
+/* After button.css, which a menu item restyles, and before the lists that set their own rows. */
+@import "./elements/item.css" layer(elements);
+@import "./elements/dropdown.css" layer(elements);
+/* After dropdown.css: an action list is its menu, with submenus and items that are on or off. */
+@import "./elements/context-menu.css" layer(elements);
+/* After popover.css: a tooltip restyles the panel. */
+@import "./elements/tooltip.css" layer(elements);
+@import "./elements/navbar.css" layer(elements);
+/* After popover.css: the stack is a popover, and undoes that panel's look. */
+@import "./elements/toast.css" layer(elements);
+@import "./elements/listbox.css" layer(elements);
+@import "./elements/combobox.css" layer(elements);
+/* After listbox.css and dialog.css: the palette is a dialog with a listbox it restyles. */
+@import "./elements/command-palette.css" layer(elements);
+@import "./elements/spinner.css" layer(elements);
+@import "./elements/disclosure.css" layer(elements);
+/* After disclosure.css: an accordion restyles its summaries. */
+@import "./elements/accordion.css" layer(elements);
+/* After button.css and link.css: a row's target sets their looks aside. */
+@import "./elements/list.css" layer(elements);
+@import "./elements/badge.css" layer(elements);
+@import "./elements/table.css" layer(elements);
+@import "./elements/skeleton.css" layer(elements);
+@import "./elements/tabs.css" layer(elements);
+@import "./elements/pagination.css" layer(elements);
+@import "./elements/progress.css" layer(elements);
+/* After progress.css: a meter in a field shares a progress bar's layout. */
+@import "./elements/meter.css" layer(elements);
+@import "./elements/chip.css" layer(elements);
+/* After input.css, chip.css and combobox.css: the well holds chips and a bare text box. */
+@import "./elements/tag-field.css" layer(elements);
+/* After link.css and button.css: a sidebar's items are links and buttons. */
+@import "./elements/sidebar.css" layer(elements);
+/* After button.css: a row's "..." button is a smaller Icon button. */
+@import "./elements/tree.css" layer(elements);
+/* After navbar.css, sidebar.css, dialog.css and drawer.css: the layouts place a Navbar, a Sidebar, and a Sidebar in a drawer. */
+@import "./elements/layout.css" layer(elements);
+@import "./elements/stacked-layout.css" layer(elements);
+@import "./elements/sidebar-layout.css" layer(elements);
+/* After input.css, button.css and popover.css: its well, toolbar buttons and selection toolbar. */
+@import "./elements/editor.css" layer(elements);
+@import "./themes/classic.css" layer(theme.classic);
+@import "./themes/glass.css" layer(theme.glass);
+/* Modern, the default: classic's opaque surfaces, flatter and denser. Glass and classic are data-theme="glass|classic". */
+@import "./themes/modern.css" layer(theme.modern);

@@ -1,0 +1,85 @@
+/*
+ * Stacked layout: an app's page with its navigation in a Navbar across the top and the page's
+ * content under it. On a narrow screen the Navbar keeps what fits, and a menu button opens the
+ * rest as a Sidebar in a drawer from the left.
+ *
+ *   <beautiful-stacked-layout>       the whole screen, on --stacked-backdrop.
+ *     <a data-skip href="#…">        first: "Skip to content", seen only while it has focus.
+ *     <header>                       the page's banner.
+ *       <button data-icon-button>    opens the drawer, shown only on a narrow screen.
+ *       <nav data-navbar>            the Navbar. A section with data-collapse hides on a narrow screen.
+ *     <dialog data-drawer="start">   optional: the drawer, a modal <dialog> holding a Sidebar.
+ *       <button data-icon-button>    closes it.
+ *       <nav data-sidebar>
+ *     <main id="…">                  the content, a pane on a wide screen, capped at --stacked-width.
+ *
+ * The skip link, the header, the content and its pane are layout.css, shared with Sidebar layout,
+ * and so is the 40rem breakpoint.
+ */
+beautiful-stacked-layout {
+  --stacked-width: 72rem;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  /* --stacked-backdrop, set here or on an ancestor, else the theme's. */
+  background: var(--stacked-backdrop, var(--layout-backdrop));
+}
+
+/*
+ * The drawer: Dialog's panel, the height of the screen, sliding in from the left. Its padding is
+ * the bezel, since the Sidebar inside has its own.
+ */
+beautiful-stacked-layout > dialog[data-drawer] {
+  /* Set on the dialog, past drawer.css's dialog[data-drawer] in specificity, so the layout's width wins. */
+  --drawer-width: 20rem;
+  --dialog-from: translateX(calc(-100% - var(--space-2)));
+  --dialog-ease: var(--ease-sheet);
+
+  gap: 0;
+  width: min(var(--drawer-width), 100% - var(--space-16));
+  height: calc(100dvh - 2 * var(--space-2));
+  max-height: none;
+  margin: var(--space-2);
+  padding: var(--surface-bezel);
+}
+
+beautiful-stacked-layout > dialog[data-drawer] > button[data-icon-button] {
+  flex: none;
+  align-self: start;
+  margin: var(--space-2) var(--space-2) 0;
+}
+
+beautiful-stacked-layout > dialog[data-drawer] > nav[data-sidebar] {
+  flex: 1;
+  min-height: 0;
+}
+
+/* The sidebar's header sits on the drawer's panel, under the close button, with no line above it. */
+beautiful-stacked-layout > dialog[data-drawer] > nav[data-sidebar] > header {
+  padding-block-start: var(--space-2);
+}
+
+@container (width < 40rem) {
+  beautiful-stacked-layout > header > nav[data-navbar] > [data-collapse] {
+    display: none;
+  }
+
+  /* A collapsed section leaves a divider beside nothing: hide one that a collapsed section follows or leads. */
+  beautiful-stacked-layout > header > nav[data-navbar] > hr:has(+ [data-collapse]),
+  beautiful-stacked-layout > header > nav[data-navbar] > [data-collapse] + hr {
+    display: none;
+  }
+}
+
+@container (width >= 40rem) {
+  /*
+   * Wide: the content's pane (layout.css) is inset from the screen's edges. Its content is capped
+   * at --stacked-width, centered, by the padding, so it needs no inner wrapper. A padding's 100% is
+   * the layout's width, so the pane's margin and border come off it.
+   */
+  beautiful-stacked-layout > main {
+    margin: 0 var(--space-2) var(--space-2);
+    padding: var(--space-8) max(var(--space-8), (100% - var(--stacked-width)) / 2 - var(--space-2) - 1px);
+  }
+}

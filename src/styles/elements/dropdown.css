@@ -1,0 +1,157 @@
+/*
+ * Dropdown: a menu of actions on Popover's panel. The menu is
+ * <beautiful-menu popover role="menu">, toggled by a button with commandfor,
+ * command="toggle-popover" and aria-haspopup="menu". Its items are <button role="menuitem"> for an
+ * action and <a role="menuitem"> for a link.
+ *
+ * An item is one row: an optional leading <svg>, its label, and an optional <kbd> shortcut at the
+ * end. A description is a <small> under the label.
+ * <hr> divides the menu, and <beautiful-menu-section role="group"> with a <header> heads a
+ * section of it.
+ *
+ *   data-color: danger, on an item, for an action that destroys something.
+ *
+ * The row and the lit item's tint are item.css, shared with Listbox. The keyboard's item
+ * is the one with :focus-visible, and while there is one the pointer lights nothing, so only one
+ * item is ever lit. A click focuses an item without :focus-visible, so it doesn't stay lit after
+ * the pointer moves on. Every selector sits in :where(), so its specificity is 0, as in
+ * popover.css, and this file comes after it, button.css and item.css.
+ */
+:where([popover][role="menu"]) {
+  /* At least this wide, or as wide as its button if that's wider. */
+  --dropdown-min-width: 12rem;
+
+  gap: 0;
+  min-width: var(--dropdown-min-width);
+  padding: var(--space-1);
+  font-size: var(--control-font-size);
+  /* The menu takes focus when the pointer opens it. Its items show where the keyboard is. */
+  outline: none;
+}
+
+@supports (width: anchor-size(width)) {
+  :where([popover][role="menu"]) {
+    min-width: max(var(--dropdown-min-width), anchor-size(width));
+  }
+}
+
+/* An item: an action or a link, restyled from Button's look to item.css's row. */
+:where([role="menu"]) :where([role^="menuitem"]) {
+  grid-template-columns: 1fr auto;
+  gap: 0 var(--space-3);
+  border: 0;
+  background: none;
+  backdrop-filter: none;
+  box-shadow: none;
+  text-decoration: none;
+  outline: none;
+  /* A menu answers at once, as a native one does: no fade between items. */
+  transition: none;
+  transform: none;
+}
+
+/* Button's rim isn't drawn on a row. */
+:where([role="menu"]) :where([role^="menuitem"])::before {
+  content: none;
+}
+
+:where([role="menu"]) :where([role^="menuitem"][data-color="danger"]) {
+  color: var(--color-danger);
+}
+
+/* A leading icon takes the first column, and the label moves to the second. */
+:where([role="menu"]) :where([role^="menuitem"]:has(> svg)) {
+  grid-template-columns: auto 1fr auto;
+}
+
+:where([role="menu"]) :where([role^="menuitem"]) > :where(svg) {
+  grid-column: 1;
+}
+
+/* An icon after the label, such as the check on the current choice, sits at the end of the row. */
+:where([role="menu"]) :where([role^="menuitem"]) > :where(svg:last-child:not(:first-child)) {
+  grid-column: -2;
+}
+
+:where([role="menu"]) :where([role^="menuitem"][data-color="danger"]) > :where(svg) {
+  color: inherit;
+}
+
+/* The shortcut, at the end of the row. */
+:where([role="menu"]) :where([role^="menuitem"]) > :where(kbd) {
+  grid-row: 1;
+  grid-column: -2;
+  padding-inline-start: var(--space-4);
+  color: var(--color-text-muted);
+  font-family: inherit;
+  font-size: inherit;
+  white-space: nowrap;
+}
+
+/* A description, under the label. */
+:where([role="menu"]) :where([role^="menuitem"]) > :where(small) {
+  grid-column: 1;
+}
+
+:where([role="menu"]) :where([role^="menuitem"]:has(> svg)) > :where(small) {
+  grid-column: 2;
+}
+
+/* The item the keyboard or pointer is on takes item.css's tint, which keeps its shortcut as it is too. A danger item tints with danger. */
+:where([role="menu"]) :where([role^="menuitem"][data-color="danger"]) {
+  --item-tint: var(--item-danger-tint);
+}
+
+/* The tint takes a little from the danger text's contrast over glass, so lit danger text moves part of the way to the text color (--item-danger-lit). */
+:where([role="menu"]) :where([role^="menuitem"][data-color="danger"]:not(:disabled):focus-visible) {
+  color: color-mix(in oklab, var(--color-danger), var(--color-text) var(--item-danger-lit));
+}
+
+@media (hover: hover) {
+  :where([role="menu"]:not(:has(:focus-visible))) :where([role^="menuitem"][data-color="danger"]:not(:disabled):hover) {
+    color: color-mix(in oklab, var(--color-danger), var(--color-text) 25%);
+  }
+}
+
+:where([role="menu"]) :where([role^="menuitem"]:not(:disabled):focus-visible) {
+  background-color: var(--item-tint);
+}
+
+@media (hover: hover) {
+  :where([role="menu"]:not(:has(:focus-visible))) :where([role^="menuitem"]:not(:disabled):hover) {
+    background-color: var(--item-tint);
+  }
+}
+
+/* A disabled item: faded, as a disabled Button is, and skipped by the arrow keys. */
+:where([role="menu"]) :where([role^="menuitem"]:disabled) {
+  background: none;
+}
+
+/* A line between groups of items: a Divider (divider.css), inset to the items' text. */
+:where([role="menu"]) > :where(hr) {
+  margin: var(--space-1) var(--control-pad-x);
+}
+
+/* A section is a column of its items, as the menu is, so each item fills its width. */
+:where(beautiful-menu-section) {
+  display: flex;
+  flex-direction: column;
+}
+
+/* A section's heading: small, muted, and not an item, so the arrow keys pass over it. */
+:where([role="menu"]) :where([role="group"]) > :where(header) {
+  padding: var(--space-2) var(--control-pad-x) var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: var(--leading-sm);
+}
+
+/* Forced colors drop the fill, so the item the keyboard is on takes an outline. */
+@media (forced-colors: active) {
+  :where([role="menu"]) :where([role^="menuitem"]:focus-visible) {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}

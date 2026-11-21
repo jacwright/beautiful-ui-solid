@@ -1,0 +1,369 @@
+/*
+ * Tree: nested items a person opens and closes, such as a site's pages. It follows APG's Tree View
+ * pattern, with the items flat in the DOM: <beautiful-tree role="tree"> holds every item as a direct
+ * child, and each item's aria-level says how deep it is. An item is one row:
+ *
+ *   ::before                   the chevron, on an item with aria-expanded; blank space on a leaf.
+ *   <svg>                      an optional icon, muted.
+ *   <beautiful-tree-label>     the name, on one line, cut short with an ellipsis.
+ *   anything after the label   the end: <beautiful-tree-end> for a status or a count, or a Badge.
+ *   <button data-tree-actions> the "..." button, last, that opens the item's menu.
+ *
+ * In static markup, the children of a closed item are in the DOM with hidden, so the tree never
+ * moves rows around to open one. The Solid Tree renders only the rows in view and puts a
+ * <beautiful-tree-spacer> in place of the rest. Items take a tertiary Button's tint under the pointer, and the selected item,
+ * aria-selected="true", a stronger one. Every selector sits in :where(), so
+ * its specificity is 0, and this file comes after button.css, whose look the "..." button shrinks.
+ */
+:where(beautiful-tree) {
+  /* One level deeper: a chevron and the gap after it, so a child's chevron sits under its parent's icon. */
+  --tree-indent: calc(var(--control-icon) + var(--space-2));
+  /* The line that marks where a dragged or moved item goes, before or after a row. */
+  --tree-drop-line: 2px;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--item-gap);
+  font-size: var(--control-font-size);
+}
+
+:where(beautiful-tree) > :where([role="treeitem"]) {
+  --tree-level: 1;
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  /* Every row is one height, so a long tree can render only the rows in view. */
+  block-size: var(--item-height);
+  /* The border is part of the height; only forced colors draw it, on the selected item. */
+  padding-block: 0;
+  padding-inline: calc(var(--space-1) - 1px + (var(--tree-level) - 1) * var(--tree-indent)) calc(var(--space-1) - 1px);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  /* The ring sits on the row's edge, inside the gap, so it never covers the rows around it. */
+  outline-offset: 0;
+  /* --tree-muted, 0 or 1, picks the text color or the muted one, resolved here so a surface's own muted shade counts. */
+  color: color-mix(in oklab, var(--color-text-muted) calc(var(--tree-muted) * 100%), var(--color-text));
+  font-weight: 500;
+  line-height: var(--leading-sm);
+  cursor: default;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--motion-quick) var(--ease-out);
+
+  /* A closed item's children. Without this, display: flex above would beat the browser's hidden. */
+  &:where([hidden]) {
+    display: none;
+  }
+
+  /* The chevron: points right while closed and down while open. Blank on a leaf, so icons line up. */
+  &::before {
+    content: "";
+    flex: none;
+    inline-size: var(--control-icon);
+    block-size: var(--control-icon);
+    transition: rotate var(--motion-collapse) var(--ease-in);
+  }
+
+  &:where([aria-expanded])::before {
+    background: var(--color-text-muted);
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6.5 4.5 3.5 3.5-3.5 3.5'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+  }
+
+  &:where([aria-expanded="true"])::before {
+    rotate: 90deg;
+    transition-duration: var(--motion-expand);
+    transition-timing-function: var(--ease-out);
+  }
+
+  > :where(svg) {
+    flex: none;
+    inline-size: var(--control-icon);
+    block-size: var(--control-icon);
+    color: var(--color-text-muted);
+    transition: color var(--motion-quick) var(--ease-out);
+  }
+
+  > :where(beautiful-tree-label) {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The end: whatever comes after the label keeps its own size, at the row's end. */
+  > :where(beautiful-tree-label ~ *) {
+    flex: none;
+  }
+
+  > :where(beautiful-tree-end) {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+    font-weight: 400;
+  }
+
+  /*
+   * The "..." button: a tertiary Icon button, smaller, to fit the row. It shows on the row under the
+   * pointer, the focused row, the selected row and the row whose menu is open, and always under a
+   * finger, which has no hover. The keyboard opens the same menu from the row, so the button is
+   * out of the Tab order and hidden from screen readers.
+   */
+  > :where([data-tree-actions]) {
+    --control-height: calc(var(--item-height) - var(--space-2));
+
+    margin-inline-end: calc(-1 * var(--space-1) + 2px);
+    opacity: 0;
+    transition: opacity var(--motion-quick) var(--ease-out);
+  }
+
+  &:where(:hover, :focus-visible, [aria-selected="true"], [data-menu-open]) > :where([data-tree-actions]) {
+    opacity: 1;
+  }
+
+  @media (hover: none) {
+    > :where([data-tree-actions]) {
+      opacity: 1;
+    }
+  }
+
+  @media (hover: hover) {
+    &:where(:not([aria-selected="true"], [aria-disabled="true"]):hover) {
+      background-color: color-mix(in oklab, var(--color-text) 8%, transparent);
+    }
+
+    &:where(:not([aria-disabled="true"]):hover) {
+      color: var(--color-text);
+
+      > :where(svg) {
+        color: var(--color-text);
+      }
+    }
+  }
+
+  /* The row whose menu is open stays lit, as under the pointer. */
+  &:where([data-menu-open]:not([aria-selected="true"])) {
+    background-color: color-mix(in oklab, var(--color-text) 8%, transparent);
+  }
+
+  /*
+   * On a lit row, a Badge drops glass's white top highlight, which washes its top edge into the
+   * tint. Its edge then shows all round, as on any other background.
+   */
+  &:where(:hover, [aria-selected="true"], [data-menu-open]) > :where(beautiful-badge) {
+    --badge-highlight: 0 0 #0000;
+  }
+
+  &:where([aria-disabled="true"]) {
+    opacity: 0.5;
+  }
+
+  /*
+   * The selected item: a stronger tint of the text color than hover's, so it reads as picked in
+   * either mode and on glass. Its icon takes the text's color, no hue: a tint, not
+   * Sidebar's raised pane, and no accent.
+   */
+  &:where([aria-selected="true"]) {
+    color: var(--color-text);
+    background-color: color-mix(in oklab, var(--color-text) var(--tree-selected-tint), transparent);
+
+    > :where(svg) {
+      color: var(--color-text);
+    }
+
+    /* Forced colors drop the tint, so the selected item keeps an edge in the highlight color. */
+    @media (forced-colors: active) {
+      border-color: Highlight;
+    }
+  }
+
+}
+
+/*
+ * Opening and closing, once wireTree has set data-animate, so the rows on the page as it loads stay
+ * put. The rows stay siblings, so the tree can later render only the rows in view.
+ *
+ * Opening: the children grow from no height to a row's, pushing the rows below down together,
+ * then fade in. Closing: they fade out, then shrink away, and the rows below rise. A shown row
+ * keeps the enter timing and a hidden one the exit's, as the browser takes the transition of the
+ * state it moves to. Exits are quicker than enters, as everywhere in the kit.
+ */
+:where(beautiful-tree[data-animate]) > :where([role="treeitem"]) {
+  --tree-grow: var(--motion-quick);
+  --tree-fade: var(--motion-quick);
+
+  overflow: clip;
+  overflow-clip-margin: 4px;
+  transition:
+    background-color var(--motion-quick) var(--ease-out),
+    block-size var(--tree-grow) var(--ease-out),
+    margin-block-start var(--tree-grow) var(--ease-out),
+    opacity var(--tree-fade) var(--ease-out) calc(var(--tree-grow) * 0.6),
+    display var(--tree-grow) allow-discrete;
+
+  &:where([hidden]) {
+    display: none;
+    block-size: 0;
+    margin-block-start: calc(-1 * var(--item-gap));
+    opacity: 0;
+    transition:
+      opacity calc(var(--tree-fade) * 0.6) var(--ease-in),
+      block-size calc(var(--tree-grow) * 0.8) var(--ease-in) calc(var(--tree-fade) * 0.4),
+      margin-block-start calc(var(--tree-grow) * 0.8) var(--ease-in) calc(var(--tree-fade) * 0.4),
+      display var(--tree-grow) allow-discrete;
+  }
+
+  /* Under reduced motion the rows don't move: the children only fade in and out. */
+  @media (prefers-reduced-motion: reduce) {
+    --tree-grow: 0ms;
+  }
+}
+
+/*
+ * Where a row grows from: no height and no gap, so it adds nothing until it grows. In a tree that
+ * renders only the rows in view (data-virtual, the Solid Tree), rows mount as they scroll into view
+ * too, so only the ones an open just showed, marked data-entering, start there.
+ */
+:where(beautiful-tree[data-animate]:not([data-virtual])) > :where([role="treeitem"]),
+:where(beautiful-tree[data-animate][data-virtual]) > :where([role="treeitem"][data-entering]) {
+  @starting-style {
+    block-size: 0;
+    margin-block-start: calc(-1 * var(--item-gap));
+    opacity: 0;
+  }
+}
+
+/*
+ * chevron="icon" (data-chevron="icon"): for trees where any item can hold others, such as pages.
+ * An item with children shows its chevron in its icon's place, under the pointer and on keyboard
+ * focus, so the rows lose the chevron's column and each level's indent is all there is. An item
+ * with no children never shows one. It needs hover, so under a finger the tree keeps the chevron's
+ * column. A row with no icon keeps the column too.
+ */
+@media (hover: hover) {
+  :where(beautiful-tree[data-chevron="icon"]) > :where([role="treeitem"]:has(> svg)) {
+    &::before {
+      display: none;
+    }
+
+    &:where([aria-expanded])::before {
+      display: block;
+      position: absolute;
+      inset-block-start: 50%;
+      inset-inline-start: calc(var(--space-1) - 1px + (var(--tree-level) - 1) * var(--tree-indent));
+      translate: 0 -50%;
+      opacity: 0;
+      transition:
+        rotate var(--motion-collapse) var(--ease-in),
+        opacity var(--motion-quick) var(--ease-out);
+    }
+
+    &:where([aria-expanded="true"])::before {
+      transition:
+        rotate var(--motion-expand) var(--ease-out),
+        opacity var(--motion-quick) var(--ease-out);
+    }
+
+    > :where(svg) {
+      transition:
+        color var(--motion-quick) var(--ease-out),
+        opacity var(--motion-quick) var(--ease-out);
+    }
+
+    &:where([aria-expanded]:is(:hover, :focus-visible))::before {
+      opacity: 1;
+    }
+
+    &:where([aria-expanded]:is(:hover, :focus-visible)) > :where(svg:first-of-type) {
+      opacity: 0;
+    }
+  }
+}
+
+/*
+ * Stands in for the rows out of view that a virtual tree doesn't render, as tall as they are. It's
+ * never the browser's scroll anchor: a spacer changes size as rows render in its place, and
+ * anchoring to it would scroll the panel back.
+ */
+:where(beautiful-tree) > :where(beautiful-tree-spacer) {
+  display: block;
+  flex: none;
+  overflow-anchor: none;
+}
+
+/*
+ * Moving (the Solid Tree's onMove). The item being moved fades back. The row it would go against
+ * shows where: a line in the gap above or below it for "before" and "after", starting at the depth
+ * the item lands at (--tree-drop-level, set on the row when "after" an open item shows under its
+ * last child), and a tint for "inside". The line is the focus
+ * ring's color, as the one mark of where something goes; the tint is the accent's, so it reads
+ * apart from the selected row's.
+ */
+:where(beautiful-tree) > :where([role="treeitem"]) {
+  &:where([data-moving]) {
+    opacity: 0.5;
+  }
+
+  &:where([data-drop="before"], [data-drop="after"])::after {
+    content: "";
+    position: absolute;
+    /* From the target's icon, past its chevron's column, so it lines up with the item's place. */
+    inset-inline: calc(var(--space-1) - 1px + var(--tree-drop-level, var(--tree-level)) * var(--tree-indent)) var(--space-1);
+    block-size: var(--tree-drop-line);
+    border-radius: var(--tree-drop-line);
+    background-color: var(--color-accent);
+    pointer-events: none;
+  }
+
+  /* Centered in the gap between rows, inside the clip margin a row keeps while the tree animates. */
+  &:where([data-drop="before"])::after {
+    inset-block-start: calc(-1px - (var(--item-gap) + var(--tree-drop-line)) / 2);
+  }
+
+  &:where([data-drop="after"])::after {
+    inset-block-end: calc(-1px - (var(--item-gap) + var(--tree-drop-line)) / 2);
+  }
+
+  &:where([data-drop="inside"]) {
+    background-color: color-mix(in oklab, var(--color-accent) 18%, transparent);
+  }
+
+  /* The browser's drag image is the row as it is when the drag starts: on the raised color, so it reads off the tree. */
+  &:where([data-drag-image]) {
+    background-color: var(--color-raised);
+  }
+
+  @media (forced-colors: active) {
+    &:where([data-drop="before"], [data-drop="after"])::after {
+      background-color: Highlight;
+    }
+
+    &:where([data-drop="inside"]) {
+      border-color: Highlight;
+    }
+  }
+}
+
+/* With chevron="icon" there's no chevron column: the drop line starts at the icon, at the row's own inset. */
+@media (hover: hover) {
+  :where(beautiful-tree[data-chevron="icon"]) > :where([role="treeitem"]:has(> svg)):where([data-drop="before"], [data-drop="after"])::after {
+    inset-inline-start: calc(var(--space-1) - 1px + (var(--tree-drop-level, var(--tree-level)) - 1) * var(--tree-indent));
+  }
+}
+
+/* How deep each item sits. Twelve levels; deeper ones sit at the twelfth, by the first rule. */
+:where(beautiful-tree > [role="treeitem"]) {
+  &:where([aria-level]:not([aria-level="1"])) { --tree-level: 12; }
+  &:where([aria-level="2"]) { --tree-level: 2; }
+  &:where([aria-level="3"]) { --tree-level: 3; }
+  &:where([aria-level="4"]) { --tree-level: 4; }
+  &:where([aria-level="5"]) { --tree-level: 5; }
+  &:where([aria-level="6"]) { --tree-level: 6; }
+  &:where([aria-level="7"]) { --tree-level: 7; }
+  &:where([aria-level="8"]) { --tree-level: 8; }
+  &:where([aria-level="9"]) { --tree-level: 9; }
+  &:where([aria-level="10"]) { --tree-level: 10; }
+  &:where([aria-level="11"]) { --tree-level: 11; }
+}

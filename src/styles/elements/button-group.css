@@ -1,0 +1,102 @@
+/*
+ * Button group: <beautiful-button-group role="group"> around buttons that sit joined, as one
+ * control cut into parts. Each button keeps its own variant and color. The group rounds only its
+ * outer corners, lets neighbours share one edge, and draws one shadow and, in glass, one rim
+ * around the whole, so the light falls on the group the way it falls on one button.
+ *
+ * The corners count shown buttons only, with :nth-child(of …), so a Dropdown's menu can sit in
+ * the group after its button, and a hidden button leaves the next one its round corners. Every
+ * selector sits in :where(), so its specificity is 0, and this file comes after button.css, so it
+ * wins by order.
+ */
+:where(beautiful-button-group) {
+  position: relative;
+  /* The rim and a focused button stack inside the group, not against the page. */
+  isolation: isolate;
+  display: inline-flex;
+  max-width: 100%;
+  vertical-align: middle;
+  border-radius: var(--radius-md);
+  box-shadow: var(--control-shadow);
+}
+
+/* The group draws the shadow and the rim, so each button draws neither, and none shrinks apart from its neighbours on press. */
+:where(beautiful-button-group) > :where(button, a[data-button]) {
+  --button-press: none;
+
+  /* No rim of its own, so a primary's border draws its whole edge. */
+  --control-primary-border-opacity: 100%;
+  --control-primary-clip: border-box;
+
+  border-radius: 0;
+  box-shadow: none;
+}
+
+:where(beautiful-button-group) > :where(button, a[data-button])::before {
+  content: none;
+}
+
+:where(beautiful-button-group) > :where(button, a[data-button]):where(:nth-child(1 of button:not([hidden]), a[data-button]:not([hidden]))) {
+  border-start-start-radius: var(--radius-md);
+  border-end-start-radius: var(--radius-md);
+}
+
+:where(beautiful-button-group) > :where(button, a[data-button]):where(:nth-last-child(1 of button:not([hidden]), a[data-button]:not([hidden]))) {
+  border-start-end-radius: var(--radius-md);
+  border-end-end-radius: var(--radius-md);
+}
+
+/*
+ * Neighbours share one edge: the one before draws it. A button after the first has no start
+ * border, and takes the 1px back as padding, so every button keeps a button's width. An Icon
+ * button has a fixed width and no padding, so it stays square.
+ */
+:where(beautiful-button-group) > :where(button, a[data-button]):where(:not(:nth-child(1 of button:not([hidden]), a[data-button]:not([hidden])))) {
+  border-inline-start-width: 0;
+}
+
+:where(beautiful-button-group) > :where(button, a[data-button]):where(:not(:nth-child(1 of button:not([hidden]), a[data-button]:not([hidden])), [data-icon-button])) {
+  padding-inline-start: var(--control-pad-x);
+}
+
+/*
+ * The edge two neighbours share is gray, so the parts read apart; a primary keeps its own. The group's outer edge stays a
+ * secondary pane's clear one, so it ends crisply against the shadow, as a Button does.
+ */
+:where(beautiful-button-group) > :where(button, a[data-button]):where(:not([data-variant="primary"], :nth-last-child(1 of button:not([hidden]), a[data-button]:not([hidden])))) {
+  border-inline-end-color: var(--control-edge);
+}
+
+/* The group takes each button's shadow away, but a pressed Toggle button keeps the shade inside its well. */
+:where(beautiful-button-group) > :where(button[aria-pressed="true"]:not([data-variant="primary"])) {
+  box-shadow: var(--toggle-shadow, var(--field-shadow));
+}
+
+/* A focused button's ring draws over its neighbours and the group's rim. */
+:where(beautiful-button-group) > :where(button, a[data-button]):where(:focus-visible) {
+  z-index: 2;
+}
+
+/*
+ * The rim: the button's (button.css), drawn once around the group's outer edge with its hotspot.
+ * The group has no border of its own, so the rim sits on its edge rather than 1px outside it.
+ * Classic sets --control-rim-content to none, so it draws nothing there.
+ */
+:where(beautiful-button-group)::before {
+  content: var(--control-rim-content);
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  width: calc(100% / var(--control-rim-scale));
+  height: calc(100% / var(--control-rim-scale));
+  padding: 1px;
+  border-radius: calc(var(--radius-md) / var(--control-rim-scale));
+  background: var(--control-hotspot), var(--control-rim);
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  transform: scale(var(--control-rim-scale));
+  transform-origin: 0 0;
+  pointer-events: none;
+}

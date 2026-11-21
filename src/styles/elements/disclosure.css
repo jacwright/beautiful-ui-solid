@@ -1,0 +1,121 @@
+/*
+ * Disclosure: a styled native <details>. Its <summary> is the button, and everything after it is
+ * the panel the browser shows and hides. Accordion is the same element with a name.
+ *
+ * The summary is a quiet control: its words at a control's size, a chevron after them that turns
+ * over when the panel opens, and a tint on hover. It reaches out by --space-2 on each side, so its
+ * words line up with the text around it and the tint has room. The panel's words line up too.
+ *
+ * The panel grows to its height and fades in, and shrinks and fades out faster. The browser gives
+ * the content its own box, ::details-content, so there is no wrapper. Where that box or
+ * interpolate-size is missing, the panel opens at once.
+ *
+ * Every selector sits in :where(), so its specificity is 0, as in button.css.
+ */
+:where(details) {
+  /* Lets the panel's height move to and from auto. */
+  interpolate-size: allow-keywords;
+}
+
+:where(details > summary) {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  inline-size: fit-content;
+  max-inline-size: calc(100% + 2 * var(--space-2));
+  min-block-size: var(--control-height);
+  margin-inline: calc(-1 * var(--space-2));
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-size: var(--control-font-size);
+  font-weight: 500;
+  /* No marker: the chevron below takes its place. Safari draws its own unless told not to. */
+  list-style: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--motion-quick) var(--ease-out);
+}
+
+:where(details > summary)::-webkit-details-marker {
+  display: none;
+}
+
+/* The chevron: points down while closed, up while open. A mask, so it takes the muted text color. */
+:where(details > summary)::after {
+  content: "";
+  flex: none;
+  inline-size: var(--control-icon);
+  block-size: var(--control-icon);
+  background: var(--color-text-muted);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4.5 6.5 3.5 3.5 3.5-3.5'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  transition: rotate var(--motion-collapse) var(--ease-in);
+}
+
+:where(details[open] > summary)::after {
+  rotate: 180deg;
+  transition-duration: var(--motion-expand);
+  transition-timing-function: var(--ease-out);
+}
+
+/* Hover only where there is a hovering pointer, so a tap doesn't leave the summary lit. */
+@media (hover: hover) {
+  :where(details > summary:hover) {
+    background-color: color-mix(in oklab, var(--color-text) 6%, transparent);
+  }
+
+  :where(details > summary:hover)::after {
+    background: var(--color-text);
+  }
+}
+
+/* After hover, so a press shows under a mouse too. */
+:where(details > summary:active) {
+  background-color: color-mix(in oklab, var(--color-text) 9%, transparent);
+}
+
+/*
+ * The panel. Closed, the browser hides its content (content-visibility), and the transition holds
+ * that back until the height and fade are done. Opening shows it at once, so a Tab pressed right
+ * after Enter goes into the panel. Its clip leaves room for a nested
+ * summary's tint and a focus ring inside it.
+ */
+:where(details)::details-content {
+  box-sizing: border-box;
+  block-size: 0;
+  padding-block: 0;
+  overflow: clip;
+  /* As far as a nested summary reaches out, plus its focus ring. */
+  overflow-clip-margin: var(--space-3);
+  opacity: 0;
+  transition:
+    block-size var(--motion-collapse) var(--ease-in),
+    padding-block var(--motion-collapse) var(--ease-in),
+    opacity var(--motion-collapse) var(--ease-in),
+    content-visibility var(--motion-collapse) allow-discrete;
+}
+
+:where(details[open])::details-content {
+  block-size: auto;
+  padding-block: var(--space-1) var(--space-2);
+  opacity: 1;
+  transition-property: block-size, padding-block, opacity;
+  transition-duration: var(--motion-expand);
+  transition-timing-function: var(--ease-out);
+}
+
+/* Under reduced motion the panel opens at once and fades, and the chevron flips. */
+@media (prefers-reduced-motion: reduce) {
+  :where(details)::details-content {
+    transition-property: opacity, content-visibility;
+  }
+
+  :where(details[open])::details-content {
+    transition-property: opacity;
+  }
+
+  :where(details > summary)::after {
+    transition: none;
+  }
+}

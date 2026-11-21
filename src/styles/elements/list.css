@@ -1,0 +1,223 @@
+/*
+ * List: native <ul> and <ol>, in two looks.
+ *
+ *   Bullets: every <ul> and <ol>, with no attribute. Prose: dots or numbers in the muted color,
+ *            hung outside the text, in the size of the text around them.
+ *     data-marker: check, on a <ul>, draws a check in place of each dot, for what a plan includes.
+ *   data-variant="rows": a list of things, one row each, with a line between rows. A row is an
+ *            optional leading <svg>, <img>, Avatar or <input>, then its <beautiful-list-body>, then
+ *            anything at its end: a <beautiful-list-end> for text, an icon or a Button. The
+ *            body's text is the title, and a <small> inside it is the description under it.
+ *            A row that is one <a href>, <button> or <label> is a target as a whole.
+ *
+ * A list drawn without the browser's markers, rows or checks, says role="list" in its markup:
+ * Safari drops a list's role when list-style is none, and screen readers then don't say
+ * "list, 4 items". Every selector sits in :where(), so its specificity is 0, as in text.css, and
+ * this file comes after button.css and link.css, whose looks a row's target sets aside.
+ */
+:where(ul, ol) {
+  --list-indent: 1.5em;
+
+  padding-inline-start: var(--list-indent);
+}
+
+:where(ul, ol) > :where(li + li),
+:where(li) > :where(ul, ol) {
+  margin-block-start: var(--space-1);
+}
+
+:where(ul, ol) > :where(li)::marker {
+  color: var(--color-text-muted);
+}
+
+/* Numbers line up on their dots, whatever their digits. */
+:where(ol) > :where(li)::marker {
+  font-variant-numeric: tabular-nums;
+}
+
+/* A list inside a list takes a ring, so its items read as part of the one above. */
+:where(ul ul) {
+  list-style-type: circle;
+}
+
+/* Checks: a mask in the accent color where the dot was, centered on the item's first line. */
+:where(ul[data-marker="check"]) {
+  list-style: none;
+}
+
+:where(ul[data-marker="check"]) > :where(li) {
+  position: relative;
+}
+
+:where(ul[data-marker="check"]) > :where(li)::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: calc(-1 * var(--list-indent));
+  width: 1em;
+  height: 1lh;
+  background: var(--color-accent);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3.5 8.5 3 3 6-7'/%3E%3C/svg%3E")
+    center / 1em no-repeat;
+}
+
+/* Forced colors drop backgrounds, so the check takes the text's system color. */
+@media (forced-colors: active) {
+  :where(ul[data-marker="check"]) > :where(li)::before {
+    background: CanvasText;
+    forced-color-adjust: none;
+  }
+}
+
+/* Rows. */
+:where(:is(ul, ol)[data-variant="rows"]) {
+  /* A leading <img>: a site's thumbnail. A person is an Avatar. */
+  --list-image: 2.5rem;
+
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+}
+
+:where([data-variant="rows"]) > :where(li) {
+  margin: 0;
+  padding-block: var(--space-3);
+}
+
+:where([data-variant="rows"]) > :where(li + li) {
+  border-block-start: var(--hairline-width) solid var(--color-hairline);
+  /* Glass's lit edge, just under the line, as a Divider's. Classic's is transparent. */
+  box-shadow: inset 0 var(--hairline-width) var(--hairline-lit);
+}
+
+/*
+ * The row: its parts side by side. A target row lays out its target, and the <li> around it
+ * only holds it.
+ */
+:where(
+  [data-variant="rows"] > li:not(:has(> :is(a[href], button, label):only-child)),
+  [data-variant="rows"] > li > :is(a[href], button, label):only-child
+) {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+
+  /* An icon, leading or at the end, in the muted color. An Avatar, an image, or a checkbox or radio leads. */
+  & > :where(svg) {
+    flex: none;
+    width: var(--control-icon);
+    height: var(--control-icon);
+    color: var(--color-text-muted);
+  }
+
+  & > :where(beautiful-avatar:first-child) {
+    flex: none;
+  }
+
+  & > :where(img:first-child) {
+    flex: none;
+    width: var(--list-image);
+    height: var(--list-image);
+    border-radius: var(--radius-md);
+    object-fit: cover;
+  }
+
+  & > :where(input:first-child) {
+    flex: none;
+    margin: 0;
+  }
+
+  /* The body: its text is the title. */
+  & > :where(beautiful-list-body) {
+    flex: 1;
+    min-width: 0;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+  }
+
+  /* The description, on its own line under the title. */
+  & > :where(beautiful-list-body) > :where(small) {
+    display: block;
+    color: var(--color-text-muted);
+    font-size: inherit;
+    font-weight: 400;
+  }
+
+  /* The end: a status or a time in <beautiful-list-end>, an icon, or a Button. Text there is muted, and keeps to one line. A Button keeps its own colors. */
+  & > :where(beautiful-list-body ~ *) {
+    flex: none;
+    order: 2;
+    white-space: nowrap;
+  }
+
+  & > :where(beautiful-list-body ~ :not(button, a[data-button])) {
+    color: var(--color-text-muted);
+  }
+
+  /* A tertiary Button last in the row reaches past the text's edge, as a target row does, so its word lines up with the ends above it. */
+  & > :where(beautiful-list-body ~ :is(button, a[data-button])[data-variant="tertiary"]:last-child) {
+    margin-inline-end: calc(-1 * var(--control-pad-x));
+  }
+}
+
+/*
+ * A target row: the whole row is one link, button or label. It is lit with the same quiet tint
+ * as a Dropdown's item, inset from the lines above and below it, and reaches a little past the
+ * text on each side, so the words line up with the rows that aren't targets.
+ */
+:where([data-variant="rows"]) > :where(li:has(> :is(a[href], button, label):only-child)) {
+  padding-block: var(--space-1);
+}
+
+:where([data-variant="rows"]) > :where(li) > :where(:is(a[href], button, label):only-child) {
+  /* item.css's tint, declared on the row so it mixes the row's own text color. */
+  --item-tint: color-mix(in oklab, var(--color-text) 9%, transparent);
+
+  position: static;
+  width: calc(100% + 2 * var(--space-3));
+  min-height: 0;
+  margin-inline: calc(-1 * var(--space-3));
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  background: none;
+  backdrop-filter: none;
+  box-shadow: none;
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  justify-content: flex-start;
+  cursor: pointer;
+  transform: none;
+  transition: background-color var(--motion-quick) var(--ease-out);
+}
+
+/*
+ * A row that links to a new tab keeps Link's arrow, the end's color, just before the end: as the
+ * row's last flex item it would land after the end, apart from the title it belongs to.
+ */
+:where([data-variant="rows"]) > :where(li) > :where(a[target="_blank"]:only-child)::after {
+  order: 1;
+  color: var(--color-text-muted);
+}
+
+/* A label around a disabled control can't be pressed, so it doesn't look as if it could. */
+:where([data-variant="rows"]) > :where(li) > :where(label:has(:disabled):only-child) {
+  cursor: default;
+}
+
+/* Button's rim isn't drawn on a row. */
+:where([data-variant="rows"]) > :where(li) > :where(button:only-child)::before {
+  content: none;
+}
+
+@media (hover: hover) {
+  :where([data-variant="rows"]) > :where(li) > :where(:is(a[href], button:not(:disabled), label:not(:has(:disabled))):only-child:hover) {
+    background-color: var(--item-tint);
+  }
+}
+
+:where([data-variant="rows"]) > :where(li) > :where(:is(a[href], button:not(:disabled), label:not(:has(:disabled))):only-child:active) {
+  background-color: var(--item-tint);
+}

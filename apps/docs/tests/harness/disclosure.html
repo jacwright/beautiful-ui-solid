@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Disclosure harness</title>
+  </head>
+  <body>
+    <!-- The Solid Disclosure rendering each docs example, for tests/disclosure.spec.ts. Not part of the site build. -->
+    <main id="app"></main>
+    <script>
+      // ?theme=classic&mode=dark, as the docs site's switches set them.
+      const query = new URLSearchParams(location.search);
+      document.documentElement.dataset.theme = query.get("theme") ?? "glass";
+      document.documentElement.dataset.mode = query.get("mode") ?? "light";
+    </script>
+    <script type="module" src="./disclosure.tsx"></script>
+  </body>
+</html>

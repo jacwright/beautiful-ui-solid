@@ -1,0 +1,157 @@
+/*
+ * Card: a pane in the page that holds one thing, such as a site, a setting or a number. A
+ * <beautiful-card>, or a meaningful element with data-card: <article>, <section>, <form>, or
+ * <li> in a list of cards. In glass it is
+ * one pane of frosted glass with the rim (surface.css), in classic a raised panel.
+ *
+ * Parts are direct children, all optional, in any order:
+ *   <img> (or <picture>, <video>) first: media that runs to the card's edges, cropped to 16:9. An icon is an
+ *   <svg>, and keeps its own size.
+ *   <hgroup> a heading and a muted line under it.
+ *   anything else: the body, one block under another.
+ *   <footer> actions, pushed to the bottom, so the footers of a row of cards line up.
+ *
+ * A linked card: <a data-card-link> inside the heading. Its ::before stretches over the whole
+ * card, so a click anywhere follows it, while a screen reader reads only the heading as the
+ * link. The card shows the link's focus ring and its hover. Other controls inside sit above
+ * the stretched link, so they stay their own.
+ *
+ * Every selector sits in :where(), so its specificity is 0, as in button.css.
+ */
+:where(:is(beautiful-card, [data-card])) {
+  --card-padding: var(--space-5);
+  --rim-radius: var(--radius-lg);
+  /* Muted text inside takes the surface's stronger shade, as in Dialog. */
+  --color-text-muted: var(--surface-text-muted);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-inline-size: 0;
+  padding: var(--card-padding);
+  /* Not clipped, so the rim can paint over the border. */
+  overflow: visible;
+  border: 1px solid var(--card-edge);
+  border-radius: var(--rim-radius);
+  color: var(--color-text);
+  background-color: var(--card-fill);
+  background-image: var(--card-sheen);
+  /* none in classic: a filter, even blur(0), would make the card a containing block for fixed children. */
+  backdrop-filter: var(--card-backdrop);
+  box-shadow: var(--shadow-card);
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+  /* A long word or URL breaks rather than widening the card. */
+  overflow-wrap: anywhere;
+  transition:
+    border-color var(--motion-quick) var(--ease-out),
+    box-shadow var(--motion-quick) var(--ease-out);
+}
+
+/* The rim (surface.css) catches a Button's light, not a dialog's. */
+:where(:is(beautiful-card, [data-card]))::before {
+  background: var(--card-hotspot), var(--card-rim);
+}
+
+/* A <li> card in a <ul> of cards takes no bullet. */
+:where(li[data-card]) {
+  list-style: none;
+}
+
+/*
+ * Media first: it runs to the edges, under the rim, with the card's top corners. It needs no
+ * width or height: it fills the card's width at --card-media-ratio, 16:9 unless the card or a
+ * list of cards sets another, and is cropped to it from the middle, so the cards in a row line up whatever the
+ * images' own sizes. --card-media-ratio: auto keeps each image's own height instead.
+ */
+:where(:is(beautiful-card, [data-card])) > :where(img, picture, video):first-child {
+  display: block;
+  inline-size: calc(100% + 2 * var(--card-padding));
+  max-inline-size: none;
+  block-size: auto;
+  aspect-ratio: var(--card-media-ratio, 16 / 9);
+  margin: calc(-1 * var(--card-padding)) calc(-1 * var(--card-padding)) 0;
+  border-radius: calc(var(--rim-radius) - 1px) calc(var(--rim-radius) - 1px) 0 0;
+  object-fit: cover;
+  overflow: hidden;
+}
+
+/* A <picture>'s image fills the picture's box. */
+:where(:is(beautiful-card, [data-card])) > :where(picture):first-child > :where(img) {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+/* The header: a heading and a muted line, close together. */
+:where(:is(beautiful-card, [data-card])) > :where(hgroup) {
+  display: grid;
+  gap: var(--space-1);
+}
+
+:where(:is(beautiful-card, [data-card])) > :where(hgroup) > :where(p) {
+  color: var(--color-text-muted);
+}
+
+/* Actions, at the bottom, whatever the card's height. */
+:where(:is(beautiful-card, [data-card])) > :where(footer) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-start: auto;
+}
+
+/*
+ * The linked card. The link reads as the heading, not as a link in text: no accent and no
+ * underline until the card is hovered. Its focus ring is the card's (below).
+ */
+:where(:is(beautiful-card, [data-card]) a[data-card-link]) {
+  color: inherit;
+  text-decoration-color: transparent;
+  outline: none;
+}
+
+:where(:is(beautiful-card, [data-card]) a[data-card-link])::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: var(--rim-radius);
+}
+
+/*
+ * Controls inside a linked card stay their own, above the stretched link. The hover rules below
+ * list the same ones. An input group is raised whole, so its icon stays above its field.
+ */
+:where(:is(beautiful-card, [data-card]):has(a[data-card-link]) :is(a:not([data-card-link]), button, input, select, textarea, summary, label, beautiful-input-group, iframe, embed, object, audio[controls], video[controls], [contenteditable], [role="button"], [role="link"], [tabindex]:not([tabindex="-1"])):not(beautiful-input-group *)) {
+  position: relative;
+  z-index: 1;
+}
+
+:where(:is(beautiful-card, [data-card]):has(a[data-card-link]:focus-visible):not(:has(:is(beautiful-card, [data-card]) a[data-card-link]:focus-visible))) {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/*
+ * Hover only where there is a hovering pointer, so a tap doesn't leave the card lit. Not while the
+ * pointer is on a control inside, whose click is its own and doesn't follow the link.
+ */
+@media (hover: hover) {
+  :where(:is(beautiful-card, [data-card]):has(a[data-card-link]):hover:not(:has(:is(a:not([data-card-link]), button, input, select, textarea, summary, label, beautiful-input-group, iframe, embed, object, audio[controls], video[controls], [contenteditable], [role="button"], [role="link"], [tabindex]:not([tabindex="-1"])):hover))) {
+    border-color: var(--card-edge-hover);
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  :where(:is(beautiful-card, [data-card]):hover:not(:has(:is(a:not([data-card-link]), button, input, select, textarea, summary, label, beautiful-input-group, iframe, embed, object, audio[controls], video[controls], [contenteditable], [role="button"], [role="link"], [tabindex]:not([tabindex="-1"])):hover)) a[data-card-link]) {
+    text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
+  }
+}
+
+@media (forced-colors: active) {
+  :where(:is(beautiful-card, [data-card]):has(a[data-card-link]:focus-visible)) {
+    outline-color: Highlight;
+  }
+}

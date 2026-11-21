@@ -1,0 +1,213 @@
+/*
+ * Dialog and Alert, on native <dialog>. The element is the panel and ::backdrop is the
+ * backdrop, so the overlay adds no nodes.
+ *
+ * Parts are direct children, or children of one <form> that takes no box:
+ *   <h2> title, <p> description, <beautiful-dialog-body> body, <footer> actions.
+ */
+dialog {
+  --dialog-width: 32rem;
+  /* Where the panel enters from and leaves to. */
+  --dialog-from: translateY(0.5rem) scale(0.96);
+  --dialog-ease: var(--ease-spring);
+
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: min(100% - 2 * var(--space-4), var(--dialog-width));
+  max-width: none;
+  max-height: calc(100dvh - 2 * var(--space-8));
+  margin: auto;
+  /* With a bezel, the content sits inside the inner panel, the same distance from its edge. */
+  padding: calc(var(--surface-bezel) + var(--space-5)) calc(var(--surface-bezel) + var(--space-6));
+  /* The body is the only scroller. The panel doesn't clip, so the rim can paint over the border. */
+  overflow: visible;
+  border: 1px solid var(--surface-edge);
+  --rim-radius: var(--radius-xl);
+  border-radius: var(--rim-radius);
+  /* Muted text inside, such as the description or a muted Text, takes the surface's stronger shade. */
+  --color-text-muted: var(--surface-text-muted);
+  color: var(--color-text);
+  background-color: var(--surface-fill);
+  background-image: var(--surface-sheen);
+  backdrop-filter: blur(var(--surface-blur)) saturate(var(--surface-saturate));
+  box-shadow: var(--shadow-overlay);
+
+  /* The closed state. Closing transitions to it, faster than opening and easing in. */
+  opacity: 0;
+  transform: var(--dialog-from);
+  transition:
+    opacity var(--motion-exit) var(--ease-in),
+    transform var(--motion-exit) var(--ease-in),
+    display var(--motion-exit) allow-discrete,
+    overlay var(--motion-exit) allow-discrete;
+}
+
+/* The panel keeps its flex layout while it animates out, then hides. */
+dialog:not([open]) {
+  display: none;
+}
+
+/* The component focuses the panel itself when no control has autofocus. The panel needs no ring. */
+dialog:focus-visible {
+  outline: none;
+}
+
+dialog[open] {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--motion-enter) var(--ease-out),
+    transform var(--motion-enter) var(--dialog-ease),
+    display var(--motion-enter) allow-discrete,
+    overlay var(--motion-enter) allow-discrete;
+
+  @starting-style {
+    opacity: 0;
+    transform: var(--dialog-from);
+  }
+}
+
+/* The rim over the outer edge is in surface.css, shared with Popover. */
+
+/* The inner panel is in surface.css, shared with Auth layout's card. */
+
+dialog::backdrop {
+  background: var(--backdrop-fill);
+  opacity: 0;
+  transition:
+    opacity var(--motion-exit) var(--ease-in),
+    display var(--motion-exit) allow-discrete,
+    overlay var(--motion-exit) allow-discrete;
+}
+
+dialog[open]::backdrop {
+  opacity: 1;
+  transition:
+    opacity var(--motion-enter) var(--ease-out),
+    display var(--motion-enter) allow-discrete,
+    overlay var(--motion-enter) allow-discrete;
+
+  @starting-style {
+    opacity: 0;
+  }
+}
+
+/*
+ * Lock the page's scroll while a modal dialog is open. Adapted from Open Props UI
+ * (opui-css 5.4.3, css/core/utils.css), Copyright (c) 2026 Felix Bohlin, MIT license:
+ * see ui/third-party/opui-css.LICENSE. Scoped to :modal, so a non-modal show() leaves the
+ * page scrollable.
+ */
+html:has(dialog:modal) {
+  overflow: clip;
+  overscroll-behavior: contain;
+}
+
+dialog > form {
+  display: contents;
+}
+
+:is(dialog, dialog > form) > h2 {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-strong);
+  line-height: 1.4;
+}
+
+:is(dialog, dialog > form) > p {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+/* As in a muted Text, a bold word in the description takes the full text color. */
+:is(dialog, dialog > form) > p strong {
+  color: var(--color-text);
+}
+
+beautiful-dialog-body {
+  display: block;
+  flex: 1 1 auto;
+  min-height: 0;
+  /*
+   * The scroll box reaches the inner panel's sides and bottom: its padding matches the
+   * panel's, and negative margins cancel it, so the text doesn't move. The 0.25rem at the top
+   * keeps focus rings inside the scroll box.
+   */
+  padding: var(--space-1) var(--space-6) var(--space-5);
+  margin: calc(var(--space-4) - var(--space-1)) calc(-1 * var(--space-6)) calc(-1 * var(--space-5));
+  overflow: auto;
+  font-size: var(--text-sm);
+}
+
+/* The body can take focus when it scrolls. Its ring goes inside, so it never covers the description. */
+beautiful-dialog-body:focus-visible {
+  outline-offset: -2px;
+}
+
+/* As the last part, the body reaches the rounded bottom corners of the panel, or of the inner panel. Round its scroll box too. */
+beautiful-dialog-body:last-child {
+  border-end-start-radius: calc(var(--radius-xl) - max(var(--surface-bezel) / 2, 1px));
+  border-end-end-radius: calc(var(--radius-xl) - max(var(--surface-bezel) / 2, 1px));
+}
+
+beautiful-dialog-body > * + * {
+  margin-block-start: var(--space-3);
+}
+
+/* A heading in the body starts a new section, so it sits further from what's above it than from what it heads. */
+beautiful-dialog-body > * + :is(h2, h3, h4, h5, h6) {
+  margin-block-start: var(--space-5);
+}
+
+/* A Divider in the body sets a section apart: as far from what's above it as from what's under it. */
+beautiful-dialog-body > hr {
+  margin-block: var(--space-5);
+}
+
+:is(dialog, dialog > form) > footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-block-start: var(--space-6);
+}
+
+@media (width < 40rem) {
+  :is(dialog, dialog > form) > footer {
+    flex-direction: column-reverse;
+  }
+}
+
+/* Alert: a short interruption. It defaults to sm. */
+dialog[role="alertdialog"] {
+  --dialog-width: 24rem;
+}
+
+/*
+ * On a narrow screen, Alert is a card floating just above the bottom edge, inset from the sides
+ * like an iOS sheet. It rises from below the screen.
+ */
+@media (width < 40rem) {
+  dialog[role="alertdialog"] {
+    --sheet-gap: var(--space-2);
+    --dialog-from: translateY(calc(100% + var(--sheet-gap) + env(safe-area-inset-bottom)));
+    --dialog-ease: var(--ease-sheet);
+
+    width: calc(100% - 2 * var(--sheet-gap));
+    margin: auto var(--sheet-gap) calc(var(--sheet-gap) + env(safe-area-inset-bottom));
+  }
+}
+
+dialog[data-size="sm"] { --dialog-width: 24rem; }
+dialog[data-size="md"] { --dialog-width: 32rem; }
+dialog[data-size="lg"] { --dialog-width: 42rem; }
+dialog[data-size="xl"] { --dialog-width: 56rem; }
+
+/* Reduced motion: a plain fade with no movement. */
+@media (prefers-reduced-motion: reduce) {
+  dialog,
+  dialog[role="alertdialog"] {
+    --dialog-from: none;
+  }
+}

@@ -1,0 +1,870 @@
+/* The docs site's own chrome. It comes after the kit's layers, so it can lay out the page. */
+@layer docs {
+  :root {
+    /* The bright stage's colors. The glass contrast test lays them behind the whole page too. */
+    --demo-bright:
+      radial-gradient(circle at 20% 30%, #f97316, transparent 40%),
+      radial-gradient(circle at 75% 25%, #8b5cf6, transparent 45%),
+      radial-gradient(circle at 60% 80%, #06b6d4, transparent 45%),
+      radial-gradient(circle at 15% 85%, #ec4899, transparent 40%),
+      light-dark(#fdf4ff, #1e1b4b);
+  }
+
+  body {
+    background:
+      radial-gradient(60rem 40rem at 10% -10%, light-dark(#dbeafe, #1e293b), transparent),
+      radial-gradient(50rem 40rem at 100% 0%, light-dark(#fce7f3, #3b1d36), transparent),
+      var(--color-canvas);
+    background-attachment: fixed;
+    min-height: 100dvh;
+  }
+
+  /* Modern lies flat: the plain canvas, no wash of color behind the page. */
+  :root:not([data-theme="glass"], [data-theme="classic"]) body {
+    background: var(--color-canvas);
+  }
+
+  /* The docs' own elements are blocks, as a custom element is inline until told otherwise. */
+  :is(beautiful-app, beautiful-table-scroll) {
+    display: block;
+  }
+
+  /*
+   * The page: the kit's Sidebar layout, on the docs' own gradient. The page scrolls, and the
+   * Sidebar stays put down the left and scrolls on its own. The Sidebar's header holds the site's
+   * name and the search, so they stay put too. On a narrow screen the Sidebar is in a drawer, and
+   * the layout's header holds the menu button and the name.
+   */
+  beautiful-site {
+    display: block;
+
+    > beautiful-sidebar-layout {
+      --sidebar-layout-backdrop: transparent;
+    }
+  }
+
+  /*
+   * The search: the kit's Combobox as a search box, over every page. Its key, /, shows
+   * at its end until it has focus or text, and never on a touch screen.
+   */
+  .site-search {
+    position: relative;
+    display: block;
+
+    > kbd {
+      position: absolute;
+      inset-block-start: 50%;
+      inset-inline-end: var(--control-pad-x);
+      translate: 0 -50%;
+      min-inline-size: var(--space-5);
+      padding-inline: var(--space-1);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xs);
+      color: var(--color-text-muted);
+      font-family: inherit;
+      font-size: var(--text-xs);
+      line-height: var(--space-5);
+      text-align: center;
+      pointer-events: none;
+    }
+
+    &:has(input:focus, input:not(:placeholder-shown)) > kbd {
+      display: none;
+    }
+
+    @media (hover: none) {
+      > kbd {
+        display: none;
+      }
+    }
+  }
+
+  .site-name {
+    margin-inline-end: auto;
+    font-weight: 700;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* The Focus ring page's speed picker: a label beside the kit's Select, as wide as its value. */
+  .demo-speed {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+
+    select {
+      inline-size: auto;
+    }
+  }
+
+  /* The theme and mode toggles: kit Buttons, fixed at the bottom right of every page. */
+  .site-toggles {
+    position: fixed;
+    inset-block-end: max(var(--space-4), env(safe-area-inset-bottom));
+    inset-inline-end: max(var(--space-4), env(safe-area-inset-right));
+    z-index: 1;
+    display: flex;
+    gap: var(--space-2);
+
+    small {
+      color: var(--color-text-muted);
+      font-size: inherit;
+      font-weight: 400;
+    }
+
+    kbd {
+      min-inline-size: var(--space-5);
+      padding-inline: var(--space-1);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xs);
+      color: var(--color-text-muted);
+      font-family: inherit;
+      font-size: var(--text-xs);
+      line-height: var(--space-5);
+    }
+
+    /* A touch screen has no key to press. */
+    @media (hover: none) {
+      kbd {
+        display: none;
+      }
+    }
+  }
+
+  /* The pages not specified yet: a Disclosure at the end of the list, in line with the items. */
+  nav[data-sidebar] details {
+    margin-block-start: var(--space-6);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+
+    > summary {
+      max-inline-size: 100%;
+      margin-inline: 0;
+    }
+
+    ul {
+      padding: 0;
+      list-style: none;
+    }
+
+    li {
+      padding: var(--space-1) var(--space-2);
+    }
+
+    small {
+      opacity: 0.7;
+    }
+  }
+
+  /* The content, in the layout's pane, with room to scroll the page's end clear of the toggles. */
+  beautiful-site > beautiful-sidebar-layout > main {
+    /* Its examples stack among themselves, under the toggles, on a phone too, where the layout leaves it unisolated. */
+    isolation: isolate;
+    padding-block-end: calc(var(--space-8) + var(--control-height) + var(--space-4));
+
+    > article {
+      max-width: 48rem;
+    }
+
+    /* The page's own article, and its direct children only, so the rules don't reach the examples' articles or dialogs. */
+    > article > h1 {
+      font-size: 2rem;
+      line-height: 1.2;
+    }
+
+    > article > h2 {
+      margin-block: var(--space-8) var(--space-3);
+      font-size: 1.25rem;
+    }
+
+    > article > h3 {
+      margin-block: var(--space-6) var(--space-2);
+      font-size: var(--text-base);
+    }
+
+    > article > :is(p, ul, ol) {
+      margin-block-end: var(--space-3);
+    }
+
+    /* A usage snippet scrolls inside itself, so a long line doesn't widen the page on a phone. */
+    > article > pre {
+      margin-block-end: var(--space-3);
+      padding: var(--space-4);
+      overflow-x: auto;
+      border-radius: var(--radius-md);
+      background: var(--color-raised);
+    }
+
+    > article > :is(ul, ol) > li + li {
+      margin-block-start: var(--space-1);
+    }
+
+    article > figure {
+      margin-block: var(--space-6);
+    }
+  }
+
+  .eyebrow {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+
+  .lede {
+    font-size: var(--text-lg);
+    color: var(--color-text-muted);
+  }
+
+  beautiful-table-scroll {
+    overflow-x: auto;
+    margin-block-end: var(--space-3);
+  }
+
+  /* The spec's own tables. A table in an example, such as a calendar's, keeps the kit's look. */
+  beautiful-table-scroll table {
+    width: 100%;
+    min-width: 36rem;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+  }
+
+  beautiful-table-scroll :is(th, td) {
+    padding: var(--space-2) var(--space-3);
+    border-block-end: 1px solid var(--color-border);
+    text-align: start;
+    vertical-align: top;
+  }
+
+  /* A part's or prop's name stays on one line: a long one widens its column instead of breaking. */
+  beautiful-table-scroll td:first-child > code {
+    white-space: nowrap;
+  }
+
+  /* The docs' own keys. An example's keys are the kit's to style, such as a Dropdown's shortcuts. */
+  kbd:not(beautiful-example-preview kbd, [role="menu"] kbd) {
+    padding: 0 var(--space-1);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 0.8em;
+  }
+
+  .example {
+    margin-block: var(--space-6);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    /* Clips to the rounded card, with room for a focus ring at its edge: 2px offset and 2px width. */
+    overflow: clip;
+    overflow-clip-margin: var(--space-1);
+
+    /* Child combinators keep these rules out of the example dialogs. */
+    > h3 {
+      margin: 0;
+      padding: var(--space-3) var(--space-4);
+      border-block-end: 1px solid var(--color-border);
+    }
+
+    /* The kit's Disclosure, stretched to a full-width row along the card's foot. */
+    > details > summary {
+      inline-size: auto;
+      max-inline-size: none;
+      margin: 0;
+      padding: var(--space-2) var(--space-4);
+      border-radius: var(--radius-md);
+      font-size: var(--text-sm);
+    }
+
+    /* The code sits flush under its toggle and reaches the card's foot. */
+    > details::details-content {
+      padding-block: 0;
+    }
+
+    /*
+     * The summary runs edge to edge, so a ring outside it would poke past the card's sides and be
+     * clipped at its corners. Its ring sits inside it instead, and when it is the card's last row its
+     * lower corners follow the card's.
+     */
+    > details > summary:focus-visible {
+      outline-offset: calc(-2 * var(--space-1));
+    }
+
+    > details:not([open]) > summary {
+      border-end-start-radius: calc(var(--radius-xl) - 1px);
+      border-end-end-radius: calc(var(--radius-xl) - 1px);
+    }
+
+    > details > pre {
+      padding: var(--space-4);
+      overflow-x: auto;
+      background: var(--color-raised);
+    }
+  }
+
+  /* The example a page opens with, under its title. It has no header bar: its title is for screen readers only. */
+  .example[data-hero] {
+    margin-block-start: var(--space-4);
+
+    > h2 {
+      margin: 0;
+    }
+  }
+
+  beautiful-example-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding: var(--space-8) var(--space-4);
+    border-block-end: 1px solid var(--color-border);
+
+    /* A Navbar spans the example, as it spans a layout, and a description list takes the row, as on a page. */
+    > :is(nav[data-navbar], dl) {
+      flex: 1 1 100%;
+    }
+
+    /* A form, a group of fields, one field, or a block marked .demo-narrow, takes a form's width. */
+    > :is(form, fieldset, beautiful-field, .demo-narrow) {
+      flex: 1 1 100%;
+      max-width: 28rem;
+    }
+
+    /* A list of rows, or the nav around one, takes a panel's width. A Navbar spans the example (above), and a Sidebar sets its own column. */
+    > :is(ul, ol, nav:not([data-navbar], [data-sidebar])) {
+      flex: 1 1 100%;
+      max-width: 32rem;
+    }
+
+    /* A table takes the example's width, and scrolls inside itself when it needs more. Tabs take
+       the whole width, as they would in a page. */
+    > beautiful-table,
+    > beautiful-tabs {
+      flex: 1 1 100%;
+    }
+  }
+
+  /* An Auth layout example is a whole page, shown in a frame the height of a laptop's screen. */
+  beautiful-example-preview > beautiful-auth-layout {
+    flex: 1 1 100%;
+    min-height: 40rem;
+    border-radius: var(--radius-xl);
+  }
+
+  /* A Stacked layout example is a whole app page too, in a shorter frame: the content is a few lines. */
+  beautiful-example-preview > beautiful-stacked-layout,
+  beautiful-demo-phone > beautiful-stacked-layout {
+    flex: 1 1 100%;
+    min-height: 28rem;
+    border-radius: var(--radius-xl);
+  }
+
+  /*
+   * A Sidebar layout example is a whole app page in a frame the height of a small laptop's screen.
+   * The frame is the screen: it scrolls the content, and the Sidebar stays put at its height.
+   */
+  beautiful-example-preview > beautiful-sidebar-layout,
+  beautiful-demo-phone > beautiful-sidebar-layout {
+    --sidebar-layout-height: 34rem;
+
+    flex: 1 1 100%;
+    block-size: var(--sidebar-layout-height);
+    overflow-y: auto;
+    border-radius: var(--radius-xl);
+  }
+
+  /* Bright content for glass to blur. It fills most of the screen, so it sits behind the dialog. */
+  beautiful-demo-stage {
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: var(--space-4);
+    width: 100%;
+    min-height: 70vh;
+    border-radius: var(--radius-xl);
+    background: var(--demo-bright);
+  }
+
+  /* Blocks one under another, such as paragraphs. */
+  beautiful-demo-stack {
+    display: grid;
+    gap: var(--space-3);
+    max-width: 36rem;
+  }
+
+  /* Sections of a settings page, a Divider between each. */
+  beautiful-demo-sections {
+    flex: 1 1 100%;
+    display: grid;
+    gap: var(--space-6);
+    max-width: 36rem;
+  }
+
+  /* Rows of a short list, such as recent activity, a soft Divider between each. */
+  beautiful-demo-rows {
+    flex: 1 1 100%;
+    display: grid;
+    gap: var(--space-3);
+    max-width: 36rem;
+  }
+
+  /* A narrow panel beside a page's main content, such as a site's summary. */
+  beautiful-demo-sidebar {
+    display: block;
+    inline-size: min(17rem, 100%);
+    padding: var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-raised);
+
+    /* A panel that scrolls, such as one holding thousands of pages. */
+    &[data-scroll] {
+      block-size: 24rem;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+  }
+
+  /* A live form's actions, under its fields. */
+  .demo-form > footer {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    justify-content: flex-end;
+    margin-block-start: var(--space-6);
+  }
+
+  /* A search box on the stage, the width of a toolbar's. */
+  .demo-search {
+    inline-size: min(20rem, 100%);
+  }
+
+  /* A phone's width, for a part that changes when it doesn't fit, such as a Navbar that scrolls. */
+  beautiful-demo-phone {
+    display: block;
+    inline-size: min(22rem, 100%);
+    border: 1px dashed var(--color-border);
+  }
+
+  /* A slider in a toolbar, between its two icons. */
+  .demo-zoom {
+    flex: 0 1 auto;
+    inline-size: 16rem;
+  }
+
+  .demo-icon {
+    inline-size: var(--control-icon);
+    block-size: var(--control-icon);
+    color: var(--color-text-muted);
+  }
+
+  /* A region whose content is still loading: the size of the list it will hold, with its spinner in the middle. */
+  .demo-busy {
+    display: grid;
+    place-items: center;
+    inline-size: 100%;
+    min-block-size: 12rem;
+    padding: var(--space-6);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+  }
+
+  /* A live example's word that the form was sent. */
+  .demo-sent {
+    color: var(--color-text-muted);
+    font-size: var(--control-font-size);
+  }
+
+  /* A note on the stage, a little wider than a search box. */
+  .demo-note {
+    inline-size: min(24rem, 100%);
+  }
+
+  /* A select on the stage, the width of a toolbar's. */
+  .demo-range {
+    inline-size: 12rem;
+  }
+
+  /* Fields side by side, with their button lined up with the controls, wrapping on a phone. */
+  beautiful-example-preview > form.demo-fields-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--space-3);
+    max-width: 40rem;
+
+    > beautiful-field {
+      flex: 1 1 10rem;
+    }
+  }
+
+  /* One line of buttons. */
+  beautiful-demo-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  /* A narrow column, such as a sidebar or a phone's width, for a component that folds up in one. */
+  beautiful-demo-narrow {
+    display: block;
+    inline-size: min(24rem, 100%);
+  }
+
+  /* A page's title with its actions: side by side, and the actions wrap under it on a phone. */
+  .demo-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    flex: 1 1 100%;
+  }
+
+  /* A page's outline: each heading close to the text it heads, and further from what's above it. */
+  beautiful-demo-outline {
+    display: grid;
+    gap: var(--space-2);
+    max-width: 36rem;
+
+    > * + :is(h2, h3, h4, h5, h6) {
+      margin-block-start: var(--space-4);
+    }
+  }
+
+  /* A landing page's top: a headline, a line under it, and its buttons. */
+  beautiful-demo-hero {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-4);
+    max-width: 40rem;
+    padding: var(--space-6);
+    text-align: center;
+    /* A soft veil of the canvas behind the words, as a real landing page would give them, so they keep their contrast over the brightest blobs. */
+    background: radial-gradient(farthest-side, color-mix(in oklab, var(--color-canvas) 60%, transparent) 50%, transparent);
+
+    > beautiful-demo-row {
+      justify-content: center;
+    }
+  }
+
+  /* A sidebar's column in an app, framed so its edges show. The tall one is a screen's height, so its body scrolls. */
+  .demo-sidebar {
+    inline-size: min(16rem, 100%);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+  }
+
+  .demo-sidebar-tall {
+    block-size: 32rem;
+  }
+
+  /* A grid of cards, as many to a row as fit. A list of cards loses its own indent. */
+  .demo-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(13rem, 100%), 1fr));
+    gap: var(--space-4);
+    inline-size: min(100%, 52rem);
+    margin: 0;
+    padding: 0;
+
+    beautiful-demo-stage > & {
+      padding: var(--space-6);
+    }
+  }
+
+  /* A stage holding a grid of cards gives it the full width, up to the grid's own. */
+  beautiful-demo-stage:has(> .demo-cards) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* One card on a stage takes a form's width, and narrows with the stage on a phone, clear of its edges. */
+  beautiful-demo-stage:has(> :is(beautiful-card, [data-card])) {
+    grid-template-columns: minmax(0, 26rem);
+    padding-inline: var(--space-4);
+  }
+
+  /* A card on its own takes a column's width, not the page's. */
+  beautiful-example-preview > :is(beautiful-card, [data-card]) {
+    max-inline-size: 28rem;
+  }
+
+  /* A number in a card of metrics. */
+  .demo-stat {
+    font-size: var(--text-3xl);
+    font-weight: 600;
+    line-height: var(--leading-3xl);
+    letter-spacing: var(--tracking-tight);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* People in a list: an avatar beside each name, as in a team's members. */
+  .demo-people {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    > li {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+  }
+
+  /* A person's name and a line under it. */
+  beautiful-demo-name {
+    display: block;
+  }
+
+  /* The Toast page's placement picker, above the Try it example. */
+  .toast-placement {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+
+  .example > .toast-placement {
+    padding: var(--space-3) var(--space-4) 0;
+
+    select {
+      width: auto;
+    }
+  }
+
+  .demo-stage-words {
+    font-size: clamp(2.5rem, 9vw, 5rem);
+    font-weight: 800;
+    line-height: 1;
+    color: light-dark(#1e1b4b, white);
+  }
+
+  /* Cards side by side, as on a dashboard, and one under another on a phone. */
+  beautiful-demo-cards {
+    flex: 1 1 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: var(--space-4);
+  }
+
+  /* A dashboard card: a raised box with its title on top. */
+  .demo-card {
+    flex: 1 1 100%;
+    padding: var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-raised);
+
+    > h3 {
+      margin-block-end: var(--space-2);
+      font-size: var(--text-sm);
+      line-height: var(--leading-sm);
+      font-weight: 500;
+      color: var(--color-text-muted);
+    }
+  }
+
+  /* A short article: a title and its paragraphs, a reading width wide. */
+  beautiful-demo-prose {
+    flex: 1 1 100%;
+    display: grid;
+    gap: var(--space-2);
+    max-width: 36rem;
+  }
+
+  /* A card's headline number. */
+  .demo-stat {
+    font-size: var(--text-2xl);
+    line-height: var(--leading-2xl);
+    font-weight: 600;
+  }
+
+  /* People in a list: each one's picture beside their name and email. */
+  .demo-people {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  /* A narrow card, a form's width. */
+  .demo-narrow {
+    max-width: 28rem;
+  }
+
+  /* The picture spans both lines of text beside it. */
+  beautiful-demo-person {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    column-gap: var(--space-3);
+
+    > :first-child {
+      grid-row: span 2;
+    }
+
+    p {
+      font-size: var(--text-sm);
+      line-height: var(--leading-sm);
+    }
+  }
+
+  /* A website example is whole sections: they bring their own space, and span the preview. */
+  beautiful-example-preview:has(> [data-section]) {
+    display: block;
+    padding: 0;
+  }
+
+  /* A prompt to copy: its title and the Copy button, then its words, wrapped to the column. */
+  .prompt {
+    margin-block: var(--space-6) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    overflow: clip;
+    overflow-clip-margin: var(--space-1);
+
+    > pre {
+      padding: var(--space-4);
+      background: var(--color-raised);
+      white-space: pre-wrap;
+      line-height: var(--leading-sm);
+    }
+  }
+
+  .prompt-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+    border-block-end: 1px solid var(--color-border);
+
+    > h3 {
+      margin: 0;
+      font-size: var(--text-base);
+    }
+  }
+
+  .prompt-note {
+    margin-block-end: var(--space-8);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+
+  .swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
+    gap: var(--space-4);
+    margin-block: var(--space-4);
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-size: var(--text-sm);
+      line-height: var(--leading-sm);
+    }
+
+    small {
+      color: var(--color-text-muted);
+    }
+  }
+
+  beautiful-swatch {
+    display: block;
+    flex: none;
+    inline-size: var(--space-12);
+    block-size: var(--space-12);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+  }
+
+  /* The home page's cards to the pages to read first, as many to a row as fit. */
+  beautiful-home-starts {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(13rem, 100%), 1fr));
+    gap: var(--space-4);
+    margin-block: var(--space-4) var(--space-3);
+  }
+
+  /* The home page's Callout sits in the flow with the paragraphs. */
+  .home > beautiful-callout {
+    margin-block: var(--space-4);
+  }
+
+  /* The Shadows page: each depth is a rounded rectangle on the canvas, wearing its --shadow-N. */
+  beautiful-elevations {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(8rem, 100%), 1fr));
+    gap: var(--space-8);
+    margin-block: var(--space-4);
+    padding: var(--space-12) var(--space-8);
+    border-radius: var(--radius-xl);
+    background: var(--color-canvas);
+  }
+
+  beautiful-elevation {
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: var(--space-1);
+    min-block-size: 9rem;
+    border-radius: var(--radius-lg);
+    background: var(--color-raised);
+    text-align: center;
+    --rim-radius: var(--radius-lg);
+
+    small {
+      color: var(--color-text-muted);
+    }
+  }
+
+  .questions li {
+    margin-block-end: var(--space-2);
+  }
+
+}
+
+/* Context menu: a site's pages, each a row with its name, its path and a … button at the end. */
+beautiful-demo-pages {
+  display: grid;
+  max-width: 28rem;
+  border: 1px solid var(--surface-edge);
+  border-radius: var(--radius-lg);
+  padding: var(--space-1);
+}
+
+beautiful-demo-page {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
+  border-radius: calc(var(--radius-lg) - var(--space-1));
+  cursor: default;
+
+  > code {
+    justify-self: start;
+    color: var(--color-text-muted);
+  }
+}
+
+beautiful-demo-page:hover,
+beautiful-demo-page:focus-within {
+  background: color-mix(in oklab, var(--color-text) 5%, transparent);
+}
+
+textarea[data-demo-writing] {
+  max-width: 28rem;
+  min-height: 7rem;
+}
+
+textarea[data-demo-writing][data-size="small"] {
+  font-size: var(--text-xs);
+}
+
+textarea[data-demo-writing][data-size="large"] {
+  font-size: var(--text-lg);
+}

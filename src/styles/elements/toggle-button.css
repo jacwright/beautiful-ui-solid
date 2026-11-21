@@ -1,0 +1,51 @@
+/*
+ * Toggle button: a native <button aria-pressed>, a button that stays pressed. It is a Button
+ * (button.css) until pressed, and pressed it sinks into the surface: a well, as a field is
+ * (the --field-* tokens), tinted with the button's color. Raised or sunk is the state, so it
+ * reads without color too.
+ *
+ *   data-variant: secondary (the default) or tertiary. A primary toggle has no look of its own.
+ *   data-color:   neutral (the default) or accent.
+ *
+ * A primary button has no pressed look, so it is left as it is.
+ *
+ * Every selector sits in :where(), so its specificity is 0, and this file comes after button.css,
+ * so its rules win by order. A Toggle group restyles its buttons with any selector of its own.
+ */
+:where(button[aria-pressed]) {
+  /* Hover and holding it down add this to the tint (--toggle-tint in tokens.css). */
+  --toggle-tint-extra: 0%;
+}
+
+:where(button[aria-pressed="true"]:not([data-variant="primary"])) {
+  border-color: var(--field-edge);
+  background-color: light-dark(
+    color-mix(in oklab, var(--button-ink) calc(var(--toggle-tint) + var(--toggle-tint-extra)), var(--field-fill)),
+    color-mix(in oklab, var(--button-ink) calc(var(--toggle-tint-dark) + var(--toggle-tint-extra)), var(--field-fill))
+  );
+  background-image: none;
+  /* The text goes a shade further from the tinted well, deeper in light mode and paler in dark, to keep 4.5:1. */
+  color: light-dark(color-mix(in oklab, var(--button-ink), #000 20%), color-mix(in oklab, var(--button-ink), #fff 20%));
+  backdrop-filter: blur(var(--control-blur)) saturate(var(--control-saturate));
+  box-shadow: var(--toggle-shadow, var(--field-shadow));
+}
+
+/* A sunk button is out of the light: no rim or hotspot on its edge. */
+:where(button[aria-pressed="true"]:not([data-variant="primary"]))::before {
+  content: none;
+}
+
+@media (hover: hover) {
+  :where(button[aria-pressed="true"]:not([data-variant="primary"])):where(:hover) {
+    --toggle-tint-extra: 6%;
+  }
+}
+
+:where(button[aria-pressed="true"]:not([data-variant="primary"])):where(:active) {
+  --toggle-tint-extra: 12%;
+}
+
+/* Disabled keeps its state, faded, with no hover or press (button.css). */
+:where(button[aria-pressed="true"]:not([data-variant="primary"]):disabled) {
+  --toggle-tint-extra: 0%;
+}

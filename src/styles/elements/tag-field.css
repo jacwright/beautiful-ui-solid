@@ -1,0 +1,122 @@
+/*
+ * Tag field: a field that holds several values as chips, with a text box after them that filters
+ * a list, as Combobox's does. The well is Input's look (the --field-* tokens), moved from the text
+ * box to <beautiful-tag-field>, so the chips sit inside the field and wrap onto more lines.
+ *
+ *   <beautiful-tag-field>
+ *     <beautiful-chips role="list">chips…</beautiful-chips>
+ *     <input role="combobox" aria-autocomplete="list">
+ *     <button data-variant="tertiary" tabindex="-1" aria-label="Show options"><svg>…</svg></button>
+ *   </beautiful-tag-field>
+ *   <beautiful-popover popover="manual">…Combobox's list, aria-multiselectable…</beautiful-popover>
+ *
+ * The chips' list takes no box of its own (display: contents), so the chips and the text box flow
+ * in one row. A chip is the control height less a space-1 band, so one row of chips keeps the
+ * field at an Input's height. Every selector sits in :where(), so its specificity is 0, and this
+ * file comes after input.css and chip.css, so its rules win by order.
+ */
+:where(beautiful-tag-field) {
+  /* The band around a chip: what's left of the control height, inside the 1px edge. */
+  --tag-field-pad: calc((var(--control-height) - var(--chip-height)) / 2 - 1px);
+
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-block-size: var(--control-height);
+  /* The end leaves room for the chevrons, which sit against the first row. */
+  padding: var(--tag-field-pad) calc(var(--control-height) + var(--space-1)) var(--tag-field-pad) var(--tag-field-pad);
+  border: 1px solid var(--field-edge);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  background-color: var(--field-fill);
+  backdrop-filter: blur(var(--control-blur)) saturate(var(--control-saturate));
+  box-shadow: var(--field-shadow);
+  cursor: text;
+  transition:
+    border-color var(--motion-quick) var(--ease-out),
+    background-color var(--motion-quick) var(--ease-out);
+
+  @media (hover: hover) {
+    &:where(:hover:not(:has(> input:disabled))) {
+      border-color: var(--field-edge-hover);
+    }
+  }
+
+  /* After hover, so an invalid field keeps its danger edge under the pointer. */
+  &:where(:has(> input[aria-invalid="true"])) {
+    border-color: var(--color-danger);
+  }
+
+  /* The text box's ring is the well's, round the chips too. */
+  &:where(:has(> input:focus-visible)) {
+    outline: 2px solid var(--color-accent);
+    outline-offset: var(--field-focus-offset);
+  }
+
+  &:where(:has(> input:disabled)) {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+:where(beautiful-tag-field) > :where(beautiful-chips) {
+  display: contents;
+}
+
+/* The chips' × is reached from the text box with ←, so it keeps its own ring inside the well. */
+:where(beautiful-tag-field) :where(beautiful-chip) > :where(button):where(:focus-visible) {
+  outline-offset: 0;
+}
+
+/* The text box: bare, the rest of the row, at a chip's height so a row keeps one height. */
+:where(beautiful-tag-field) > :where(input) {
+  flex: 1 1 var(--tag-field-text-min);
+  inline-size: auto;
+  min-inline-size: var(--tag-field-text-min);
+  block-size: var(--chip-height);
+  padding: 0 var(--space-1);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+  box-shadow: none;
+  outline: none;
+
+  /* The well fades as a whole. */
+  &:where(:disabled) {
+    opacity: 1;
+  }
+
+  &:where(:autofill) {
+    box-shadow: none;
+  }
+}
+
+/* With no chips, the text starts where an Input's does. */
+:where(beautiful-tag-field):where(:not(:has(beautiful-chip))) > :where(input) {
+  padding-inline-start: calc(var(--control-pad-x) - 1px - var(--tag-field-pad));
+}
+
+/* The chevrons: Input's end button, held against the first row as the field grows. */
+:where(beautiful-tag-field) > :where(button:last-child) {
+  --button-ink: var(--color-text-muted);
+
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  inline-size: calc(var(--control-height) - 2px);
+  block-size: calc(var(--control-height) - 2px);
+  min-block-size: 0;
+  padding: 0;
+  border-radius: calc(var(--radius-md) - 1px);
+  outline-offset: -2px;
+}
+
+/* The "Add …" row: the words typed, after the options that match them. */
+:where(beautiful-listbox-option[data-create]) {
+  color: var(--color-text-muted);
+}

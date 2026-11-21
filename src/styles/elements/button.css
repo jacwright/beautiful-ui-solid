@@ -1,0 +1,222 @@
+/*
+ * Button, on native <button>, and on <a data-button> for a link that looks like one.
+ *
+ *   data-variant: primary, secondary (the default), tertiary. Named for the role, not the look.
+ *   data-color:   neutral (the default), accent, danger.
+ *   data-shape:   rounded (the default), pill. --button-radius sets any other corner.
+ *
+ * Every selector sits in :where(), so its specificity is 0. A component built from a <button>,
+ * such as a tab or a menu item, restyles it with any selector of its own.
+ */
+:where(button, a[data-button]) {
+  /* The color: primary fills with it, secondary and tertiary write their text in it. data-color sets both. */
+  --button-fill: var(--color-neutral-fill);
+  --button-ink: var(--color-text);
+  --button-press: scale(0.98);
+  /*
+   * The corner radius. data-shape="pill" sets it; for any other corner set this, not border-radius,
+   * so the rim and its glint (::before) round with it instead of poking out past the corners.
+   */
+  --button-radius: var(--radius-md);
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-height);
+  /* The border is part of the height, so the padding gives up 1px on each side. */
+  padding: calc(var(--space-1) - 1px) calc(var(--control-pad-x) - 1px);
+  border: 1px solid transparent;
+  border-radius: var(--button-radius);
+  color: var(--button-ink);
+  background: transparent;
+  font-size: var(--control-font-size);
+  font-weight: var(--weight-control);
+  line-height: 1.25rem;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--motion-quick) var(--ease-out),
+    border-color var(--motion-quick) var(--ease-out),
+    color var(--motion-quick) var(--ease-out),
+    transform var(--motion-quick) var(--ease-out);
+}
+
+:where(button, a[data-button]):where([data-color="accent"]) {
+  --button-fill: var(--color-accent-fill);
+  --button-ink: var(--color-accent);
+}
+
+:where(button, a[data-button]):where([data-color="danger"]) {
+  --button-fill: var(--color-danger-fill);
+  --button-ink: var(--color-danger);
+}
+
+/* A pill: round ends, at any height. An Icon button that is a pill is a circle. */
+:where(button, a[data-button]):where([data-shape="pill"]) {
+  --button-radius: var(--radius-full);
+}
+
+/* An icon is an <svg> child, sized to the text. */
+:where(button, a[data-button]) > :where(svg) {
+  flex: none;
+  width: var(--control-icon);
+  height: var(--control-icon);
+}
+
+/*
+ * Icon button: a square Button with only an icon. data-icon-button marks it, since CSS can't see
+ * that a button has no text. It is as wide as it is tall, so it lines up with a Button beside it,
+ * and its name is its aria-label.
+ */
+:where(button, a[data-button]):where([data-icon-button]) {
+  flex: none;
+  inline-size: var(--control-height);
+  padding: 0;
+}
+
+/*
+ * Primary: the main action. The color as the fill, white text. --button-tone is the fill before
+ * the theme's opacity: hover and press change the tone. Glass lets some of the page through. No
+ * sheen: it would lighten the fill behind the white text.
+ */
+:where(button, a[data-button]):where([data-variant="primary"]) {
+  --button-tone: var(--button-fill);
+  --button-edge: color-mix(in srgb, color-mix(in oklab, var(--button-fill), #000 12%) var(--control-primary-opacity), transparent);
+
+  /* Light glass paints the edge in the rim (::before) instead, and stops the fill inside it. */
+  border-color: color-mix(in srgb, var(--button-edge) var(--control-primary-border-opacity), transparent);
+  color: var(--color-on-fill);
+  background-color: color-mix(in srgb, var(--button-tone) var(--control-primary-opacity), transparent);
+  background-clip: var(--control-primary-clip);
+  backdrop-filter: blur(var(--control-blur)) saturate(var(--control-saturate));
+  box-shadow: var(--control-shadow);
+}
+
+/* Secondary: every other action. The control fill with an edge, text in the color. On glass it is a pane of frosted glass. */
+:where(button, a[data-button]):where(:not([data-variant]), [data-variant="secondary"]) {
+  border-color: var(--control-pane-edge);
+  background-color: var(--control-fill);
+  background-image: var(--control-sheen);
+  backdrop-filter: blur(var(--control-blur)) saturate(var(--control-saturate));
+  box-shadow: var(--control-shadow);
+}
+
+/* Tertiary: a quiet action. Text only, until the pointer is over it. */
+
+/*
+ * The rim on primary and secondary: the same hairline the Dialog panel draws, over the outer edge
+ * of the border. See dialog.css for how the scale keeps it one device pixel. Classic draws none.
+ */
+:where(button, a[data-button]):where(:not([data-variant="tertiary"]))::before {
+  /* Classic sets this to none, so it draws no box at all and axe can judge the contrast. */
+  content: var(--control-rim-content);
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: calc((100% + 2px) / var(--control-rim-scale));
+  height: calc((100% + 2px) / var(--control-rim-scale));
+  padding: 1px;
+  border-radius: calc(var(--button-radius) / var(--control-rim-scale));
+  background: var(--control-hotspot), var(--control-rim);
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  transform: scale(var(--control-rim-scale));
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+/* A primary's rim lays its light over the share of the edge color its border leaves out. */
+:where(button, a[data-button]):where([data-variant="primary"])::before {
+  background:
+    var(--control-hotspot),
+    var(--control-rim),
+    linear-gradient(color-mix(in srgb, var(--button-edge) calc(100% - var(--control-primary-border-opacity)), transparent) 0 0);
+}
+
+/* Hover only where there is a hovering pointer, so a tap doesn't leave a button lit. */
+@media (hover: hover) {
+  /* Darker, not lighter: lightening the fill would take its white text under 4.5:1. */
+  :where(button, a[data-button]):where([data-variant="primary"]):where(:hover) {
+    --button-tone: color-mix(in oklab, var(--button-fill), #000 8%);
+  }
+
+  :where(button, a[data-button]):where(:not([data-variant]), [data-variant="secondary"]):where(:hover) {
+    background-color: color-mix(in oklab, var(--button-ink) 6%, var(--control-fill));
+  }
+
+  :where(button, a[data-button]):where([data-variant="tertiary"]):where(:hover) {
+    background-color: color-mix(in oklab, var(--button-ink) 8%, transparent);
+  }
+}
+
+/* Pressed: a shade darker, and a little smaller, as if pushed in. */
+:where(button, a[data-button]):where(:active) {
+  transform: var(--button-press);
+}
+
+:where(button, a[data-button]):where([data-variant="primary"]):where(:active) {
+  --button-tone: color-mix(in oklab, var(--button-fill), #000 16%);
+}
+
+:where(button, a[data-button]):where(:not([data-variant]), [data-variant="secondary"]):where(:active) {
+  background-color: color-mix(in oklab, var(--button-ink) 12%, var(--control-fill));
+}
+
+:where(button, a[data-button]):where([data-variant="tertiary"]):where(:active) {
+  background-color: color-mix(in oklab, var(--button-ink) 14%, transparent);
+}
+
+/* Disabled: faded, with no hover or press. The rules above are all specificity 0, so this one wins by order. */
+:where(button:disabled) {
+  opacity: 0.5;
+  cursor: default;
+  transform: none;
+}
+
+:where(button:disabled):where([data-variant="primary"]) {
+  --button-tone: var(--button-fill);
+}
+
+:where(button:disabled):where(:not([data-variant]), [data-variant="secondary"]) {
+  background-color: var(--control-fill);
+}
+
+:where(button:disabled):where([data-variant="tertiary"]) {
+  background-color: transparent;
+}
+
+/*
+ * Busy: a form on its way (an app marks its button aria-busy="true" until the next page). The
+ * Spinner's arc turns before the label. It's the ::after, since ::before is the rim, and order puts it first.
+ */
+:where(button[aria-busy="true"]) {
+  cursor: progress;
+}
+
+:where(button[aria-busy="true"])::after {
+  content: "";
+  order: -1;
+  flex: none;
+  inline-size: var(--spinner-sm);
+  block-size: var(--spinner-sm);
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.75' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='10' pathLength='100' stroke-dasharray='28 100' transform='rotate(-90 12 12)'/%3E%3C/svg%3E") center / contain no-repeat;
+  animation: spinner-turn var(--motion-spin) linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(button, a[data-button]) {
+    --button-press: none;
+  }
+
+  :where(button[aria-busy="true"])::after {
+    animation-duration: calc(3 * var(--motion-spin));
+  }
+}

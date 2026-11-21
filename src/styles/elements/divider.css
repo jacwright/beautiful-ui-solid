@@ -1,0 +1,38 @@
+/*
+ * Divider: the native <hr>, a hairline between sections. It runs the width of what holds it.
+ *
+ *   data-soft                    a fainter line, for a quieter break inside a section.
+ *   aria-orientation="vertical"  a line that stands between things side by side, such as two
+ *                                groups of buttons. It fills the height its row gives it.
+ *
+ * Every selector sits in :where(), so its specificity is 0, as in heading.css. A component that
+ * owns its own <hr>, such as a Dropdown, styles it with any selector. A Divider sets no margin:
+ * the space around it belongs to what holds it, as a Heading's does.
+ */
+:where(hr) {
+  /* The browser draws an <hr> gray and inset. The line is a tint of the text around it instead. */
+  color: inherit;
+  /* Full width in a flex column that centers its items too, where an <hr> would shrink to nothing. */
+  align-self: stretch;
+  block-size: 0;
+  border: 0 solid var(--color-hairline);
+  border-block-start-width: var(--hairline-width);
+  /* Glass's lit edge, under the line. Classic's is transparent. */
+  box-shadow: 0 var(--hairline-width) var(--hairline-lit);
+}
+
+:where(hr[data-soft]) {
+  border-color: var(--color-hairline-soft);
+}
+
+:where(hr[aria-orientation="vertical"]) {
+  align-self: stretch;
+  inline-size: 0;
+  block-size: auto;
+  /* A line's height at least, where no flex or grid row stretches it. */
+  min-block-size: 1lh;
+  border-block-start-width: 0;
+  border-inline-start-width: var(--hairline-width);
+  /* The lit edge is on the side away from the light, which comes from the upper right. */
+  box-shadow: calc(var(--hairline-width) * -1) 0 var(--hairline-lit);
+}

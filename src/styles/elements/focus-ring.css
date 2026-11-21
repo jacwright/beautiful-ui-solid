@@ -1,0 +1,29 @@
+/*
+ * The moving focus ring (focus-ring.ts): one <beautiful-focus-ring>, a manual popover so it
+ * draws in the top layer, above a modal dialog. It shows only while it glides. The script sets
+ * its place, size, radii and clip each frame, and its border from the target's outline.
+ */
+beautiful-focus-ring {
+  /* A popover, but not a popup: none of popover.css or surface.css, in this same layer, applies. */
+  all: revert-layer;
+  position: fixed;
+  display: block;
+  inset: 0 auto auto 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  border: 2px solid var(--color-accent);
+  background: none;
+  pointer-events: none;
+}
+
+beautiful-focus-ring:not(:popover-open) {
+  display: none;
+}
+
+beautiful-focus-ring::before,
+beautiful-focus-ring::after {
+  content: none;
+}

@@ -1,0 +1,92 @@
+/*
+ * Radio: a native <input type="radio">, drawn as a circle with appearance: none, so the focus
+ * ring around it is a circle too. Chrome won't round a native radio's ring.
+ *
+ * Unchecked, it is a well, like Input: the --field-* tokens, with a darker edge that holds 3:1,
+ * so the circle shows on its own (WCAG 1.4.11). Checkbox reads the same tokens. Checked, it
+ * fills with the accent, at a primary Button's opacity, and a dot in the fill's ink grows in the
+ * middle. The dot is a radial gradient over the fill, so no pseudo-element is needed: an <input>
+ * can't hold one in every browser.
+ *
+ * Every rule sits in :where(), so its specificity is 0, as in button.css.
+ */
+
+/* The dot's radius, registered so it can grow. */
+@property --radio-dot {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+:where(input[type="radio"]) {
+  --radio-checked: color-mix(in srgb, var(--color-accent-fill) var(--control-primary-opacity), transparent);
+
+  flex: none;
+  /* In a table cell or a line of text, it sits on the middle of the line. */
+  vertical-align: middle;
+  inline-size: var(--control-choice);
+  block-size: var(--control-choice);
+  margin: 0;
+  border: 1px solid var(--control-choice-edge);
+  border-radius: 50%;
+  background-color: var(--field-fill);
+  /* A hard edge half a pixel wide, so the dot is round and crisp at any size. */
+  background-image: radial-gradient(
+    circle closest-side,
+    var(--color-on-fill) calc(var(--radio-dot) - 0.5px),
+    transparent var(--radio-dot)
+  );
+  backdrop-filter: blur(var(--control-blur)) saturate(var(--control-saturate));
+  box-shadow: var(--field-shadow);
+  appearance: none;
+  cursor: pointer;
+  transition:
+    border-color var(--motion-quick) var(--ease-out),
+    background-color var(--motion-quick) var(--ease-out),
+    --radio-dot var(--motion-quick) var(--ease-out);
+
+  @media (hover: hover) {
+    &:where(:hover:not(:checked, :disabled)) {
+      border-color: var(--control-choice-edge-hover);
+    }
+  }
+
+  /* The accent fills the circle, edge and all, and the dot grows in its middle. */
+  &:where(:checked) {
+    --radio-dot: calc(var(--control-choice-dot) / 2);
+
+    border-color: transparent;
+    background-color: var(--radio-checked);
+    box-shadow: none;
+  }
+
+  /* After hover, so an invalid radio keeps its danger edge under the pointer. */
+  &:where([aria-invalid="true"]:not(:checked)) {
+    border-color: var(--color-danger);
+  }
+
+  &:where(:disabled) {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  /* The dot appears at its size, with no growing. */
+  @media (prefers-reduced-motion: reduce) {
+    transition:
+      border-color var(--motion-quick) var(--ease-out),
+      background-color var(--motion-quick) var(--ease-out);
+  }
+
+  /*
+   * Forced colors drop backgrounds and shadows, so the dot would vanish. The browser's own radio
+   * draws in the system's colors instead.
+   */
+  @media (forced-colors: active) {
+    appearance: auto;
+  }
+}
+
+/* A radio's label is the bigger target: a click on it checks the radio too. */
+:where(beautiful-field > input[type="radio"]:not(:disabled) ~ label) {
+  cursor: pointer;
+}

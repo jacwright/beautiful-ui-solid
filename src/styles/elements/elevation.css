@@ -1,0 +1,18 @@
+/*
+ * data-elevation="1" to "4": an element picks one of the kit's four shadow depths (tokens.css).
+ * The depth is the only choice: the light is the theme's, so a shadow always falls away from it.
+ * The glint is a separate opt-in (data-glint, surface.css), because a rim needs a rounded box on
+ * glass and a shadow doesn't.
+ */
+:where([data-elevation="1"]) {
+  box-shadow: var(--shadow-1);
+}
+:where([data-elevation="2"]) {
+  box-shadow: var(--shadow-2);
+}
+:where([data-elevation="3"]) {
+  box-shadow: var(--shadow-3);
+}
+:where([data-elevation="4"]) {
+  box-shadow: var(--shadow-4);
+}

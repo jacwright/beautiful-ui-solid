@@ -1,0 +1,188 @@
+/*
+ * Callout: a notice in the page's flow, on <beautiful-callout role="note">. No element fits: an
+ * <aside> is a landmark, and a <footer> outside a section is the page's.
+ *
+ *   data-tone: info (the default), success, warning, danger, neutral. It sets the tint, the edge
+ *              and the icon, and the text stays the text color, so it reads in every tone.
+ *
+ * Inside: a <strong> title, then any text, then <beautiful-callout-actions> for buttons. A
+ * <button data-dismiss> sits at the end of the first line. The icon is the ::before, drawn with a
+ * mask, so it adds no node and no words: the title says what kind of notice it is.
+ *
+ * The layout is one grid: the icon in the first column, everything else in the second, and the
+ * dismiss button in the third. Every selector sits in :where(), so its specificity is 0.
+ */
+:where(beautiful-callout) {
+  /* How far an announced callout rises as it arrives, and a dismissed one as it leaves. */
+  --callout-rise: var(--space-2);
+  /* The tone's color: the icon, and the tint of the fill and the edge. --callout-icon is its mark. */
+  --callout-ink: var(--color-accent);
+  --callout-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round'%3E%3Ccircle cx='10' cy='10' r='7.25'/%3E%3Cpath d='M10 9.25v4.5'/%3E%3Cpath d='M10 6.4v.01' stroke-width='2'/%3E%3C/svg%3E");
+
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--leading-sm) minmax(0, 1fr);
+  align-items: start;
+  column-gap: var(--space-3);
+  row-gap: var(--space-1);
+  padding: calc(var(--space-3) - 1px) calc(var(--space-4) - 1px);
+  border: 1px solid color-mix(in oklab, var(--callout-ink) var(--callout-edge), var(--control-pane-edge));
+  border-radius: var(--radius-lg);
+  color: var(--color-text);
+  /* Light mode takes less of the tone than dark, so both read as the pane with a hint of color. */
+  background-color: light-dark(
+    color-mix(in oklab, var(--callout-ink) var(--callout-tint-light), var(--control-fill)),
+    color-mix(in oklab, var(--callout-ink) var(--callout-tint-dark), var(--control-fill))
+  );
+  background-image: var(--control-sheen);
+  backdrop-filter: blur(var(--control-blur)) saturate(var(--control-saturate));
+  box-shadow: var(--callout-shadow);
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+  overflow-wrap: anywhere;
+}
+
+:where(beautiful-callout[data-tone="success"]) {
+  --callout-ink: var(--color-success);
+  --callout-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='10' cy='10' r='7.25'/%3E%3Cpath d='m6.9 10.2 2.2 2.2 4-4.4'/%3E%3C/svg%3E");
+}
+
+:where(beautiful-callout[data-tone="warning"]) {
+  --callout-ink: var(--color-warning);
+  --callout-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8.7 3.75a1.5 1.5 0 0 1 2.6 0l6 10.5a1.5 1.5 0 0 1-1.3 2.25H4a1.5 1.5 0 0 1-1.3-2.25z'/%3E%3Cpath d='M10 8v3.5'/%3E%3Cpath d='M10 14v.01' stroke-width='2'/%3E%3C/svg%3E");
+}
+
+:where(beautiful-callout[data-tone="danger"]) {
+  --callout-ink: var(--color-danger);
+  --callout-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round'%3E%3Ccircle cx='10' cy='10' r='7.25'/%3E%3Cpath d='M10 6.25v4.5'/%3E%3Cpath d='M10 13.6v.01' stroke-width='2'/%3E%3C/svg%3E");
+}
+
+:where(beautiful-callout[data-tone="neutral"]) {
+  --callout-ink: var(--color-text-muted);
+  --callout-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round'%3E%3Crect x='3.25' y='3.25' width='13.5' height='13.5' rx='3'/%3E%3Cpath d='M7 8h6M7 11.75h4'/%3E%3C/svg%3E");
+}
+
+/* A third column for the ×, only when there is one, so a callout without it keeps its text to the padding. */
+:where(beautiful-callout:has(> button[data-dismiss])) {
+  grid-template-columns: var(--leading-sm) minmax(0, 1fr) auto;
+}
+
+/* The icon: as tall as the first line, so it sits level with the title. */
+:where(beautiful-callout)::before {
+  content: "";
+  grid-column: 1;
+  grid-row: 1;
+  block-size: var(--leading-sm);
+  background-color: var(--callout-ink);
+  mask: var(--callout-icon) center / contain no-repeat;
+}
+
+:where(beautiful-callout) > :where(*) {
+  grid-column: 2;
+}
+
+/* The title: a line of the text's own color, heavier. strong is inline, and the grid makes it a block. */
+:where(beautiful-callout) > :where(strong) {
+  font-weight: var(--weight-strong);
+}
+
+/* Paragraphs and lists keep a little more space between them than the title leaves above the first. */
+:where(beautiful-callout) > :where(:not(strong) + :is(p, ul, ol)) {
+  margin-block-start: var(--space-1);
+}
+
+:where(beautiful-callout) :where(ul, ol) {
+  padding-inline-start: var(--space-5);
+}
+
+:where(beautiful-callout-actions) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-start: var(--space-2);
+}
+
+/*
+ * Dismiss: a tertiary button with a ×, at the end of the first line. It is a full control in
+ * size, so it is easy to hit, and its negative margins let it reach into the padding rather than
+ * push the first line down. It never reaches past the padding to the edge: where a finger-sized
+ * control is taller than the padding allows above it, it hangs lower.
+ */
+:where(beautiful-callout) > :where(button[data-dismiss]) {
+  --dismiss-reach: calc((var(--leading-sm) - var(--control-height)) / 2);
+  --dismiss-top: max(var(--dismiss-reach), calc(1px - var(--space-3)));
+
+  grid-column: 3;
+  grid-row: 1;
+  inline-size: var(--control-height);
+  block-size: var(--control-height);
+  margin-block: var(--dismiss-top) calc(var(--leading-sm) - var(--control-height) - var(--dismiss-top));
+  margin-inline: 0 max(var(--dismiss-reach), calc(1px - var(--space-4)));
+  padding: 0;
+}
+
+:where(beautiful-callout) > :where(button[data-dismiss])::after {
+  content: "";
+  inline-size: var(--control-icon);
+  block-size: var(--control-icon);
+  background-color: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='m6 6 8 8M14 6l-8 8'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+/*
+ * The rim on glass: the hairline a secondary Button draws, over the outer edge of the border. See
+ * surface.css for how the scale keeps it one device pixel. Classic draws none.
+ */
+:where(beautiful-callout)::after {
+  content: var(--control-rim-content);
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: calc((100% + 2px) / var(--surface-rim-scale));
+  height: calc((100% + 2px) / var(--surface-rim-scale));
+  padding: 1px;
+  border-radius: calc(var(--radius-lg) / var(--surface-rim-scale));
+  background: var(--control-hotspot), var(--control-rim);
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  transform: scale(var(--surface-rim-scale));
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+/*
+ * A callout that is announced arrives as it is added: it fades in and rises a little. One that is
+ * dismissed fades out, quicker, and the component removes it when that ends. A callout that is on
+ * the page from the start doesn't move.
+ */
+:where(beautiful-callout) {
+  transition:
+    opacity var(--motion-exit) var(--ease-in),
+    translate var(--motion-exit) var(--ease-in);
+}
+
+:where(beautiful-callout):where([role="status"], [role="alert"]):where(:not([data-leaving])) {
+  transition:
+    opacity var(--motion-enter) var(--ease-out),
+    translate var(--motion-enter) var(--ease-out);
+
+  @starting-style {
+    opacity: 0;
+    translate: 0 var(--callout-rise);
+  }
+}
+
+:where(beautiful-callout[data-leaving]) {
+  opacity: 0;
+  translate: 0 calc(-0.5 * var(--callout-rise));
+}
+
+/* Under reduced motion it only fades. */
+@media (prefers-reduced-motion: reduce) {
+  :where(beautiful-callout) {
+    --callout-rise: 0px;
+  }
+}

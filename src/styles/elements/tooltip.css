@@ -1,0 +1,65 @@
+/*
+ * Tooltip: a short hint about a control, shown while the pointer rests on it or keyboard focus is
+ * on it. It is Popover's panel, smaller: <beautiful-tooltip popover="hint" role="tooltip">, and its
+ * control points at it with interestfor. Where the browser has interest invokers, it shows and
+ * hides the tip after the delays below, and hides it on Escape, with no JS. The pointer passes
+ * through the tip. Elsewhere wireTooltip (tooltip.tsx) does the same.
+ *
+ *   data-anchor:   Popover's values. A tooltip's default is "top": centered above its control.
+ *   data-shortcut: a key shortcut to show after the words, such as "⌘Z", quieter than they are.
+ *                  It is drawn by CSS with no alt text, so it stays out of the control's name.
+ *                  The control's aria-keyshortcuts says it to a screen reader.
+ *
+ * The control names the tip with aria-describedby, or with aria-labelledby when the tip is its
+ * only name, as on an icon button. The look is Popover's: the --popup-* tokens and the surface's
+ * light. Every selector sits in :where(), after popover.css, so these win over Popover's.
+ */
+:where([interestfor]) {
+  interest-delay: var(--tooltip-delay) var(--tooltip-hide-delay);
+}
+
+/*
+ * While a tip shows, moving to another control shows its tip at once, as in the OS: only the
+ * first tip waits. The next one replaces the first, because one hint shows at a time.
+ */
+:where(:root:has(beautiful-tooltip:popover-open) [interestfor]) {
+  --tooltip-delay: 0s;
+}
+
+:where(beautiful-tooltip) {
+  --popover-width: 15rem;
+  --rim-radius: var(--radius-md);
+
+  flex-direction: row;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-color: var(--tooltip-edge);
+  color: var(--tooltip-ink);
+  background-color: var(--tooltip-fill);
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  text-wrap: pretty;
+  /* The pointer passes through to what's under the tip, so a tip never holds itself open over it. */
+  pointer-events: none;
+  /* Hidden while its control is scrolled out of view, rather than left floating over the page. */
+  position-visibility: anchors-visible;
+}
+
+/* The shortcut, after the words. */
+:where(beautiful-tooltip[data-shortcut])::after {
+  content: attr(data-shortcut) / "";
+  margin-inline-start: auto;
+  color: var(--tooltip-shortcut);
+  white-space: nowrap;
+}
+
+@supports (position-area: top) {
+  /* Centered above its control by default, flipping below where there's no room. */
+  :where(beautiful-tooltip:not([data-anchor])) {
+    margin: 0 var(--space-4) var(--popover-gap);
+    position-area: top;
+    position-try-fallbacks: flip-block, --popover-below, --popover-above;
+    transform-origin: bottom;
+  }
+}

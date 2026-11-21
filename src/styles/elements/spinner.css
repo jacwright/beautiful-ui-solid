@@ -1,0 +1,138 @@
+/*
+ * Spinner: something is loading, and how long is unknown. One element, <beautiful-spinner
+ * role="status">. Its text is the words a screen reader hears ("Loading" unless told more), and
+ * the ring is drawn from its two pseudo-elements: ::before is the faint track, ::after the arc
+ * that turns. Both are CSS masks filled with --spinner-color, the text color unless accent.
+ *
+ *   data-size: sm (the default, the size of the text around it), md (a card or a panel), lg (a page).
+ *   data-color: accent. Left out, it is the color of the text it sits in.
+ *   data-label="visible": shows its words beside the ring (under it at md and lg). Left out,
+ *     the words are pushed out of the box, still read by screen readers.
+ *   data-delay="none": shows at once. Left out, it fades in after --spinner-delay, so a quick
+ *     load never flashes a spinner.
+ *
+ * Under reduced motion the arc stops turning, and the ring breathes in place instead.
+ * Every selector sits in :where(), so its specificity is 0, as in button.css.
+ */
+:where(beautiful-spinner) {
+  --spinner-size: var(--spinner-sm);
+  --spinner-color: currentColor;
+  --spinner-track: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.75'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3C/svg%3E");
+  --spinner-arc: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.75' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='10' pathLength='100' stroke-dasharray='28 100' transform='rotate(-90 12 12)'/%3E%3C/svg%3E");
+  position: relative;
+  display: inline-block;
+  inline-size: var(--spinner-size);
+  block-size: var(--spinner-size);
+  /* Sits on the text's line like an icon, centered on its capitals. */
+  vertical-align: -0.125em;
+  /* The words are for screen readers here: pushed past the box and clipped, never hidden from them. */
+  overflow: hidden;
+  white-space: nowrap;
+  /* Twice its own size, not a percentage, which would be of the container and could be 0. */
+  text-indent: calc(2 * var(--spinner-size));
+  animation: spinner-in var(--motion-enter) var(--ease-out) var(--spinner-delay) backwards;
+}
+
+:where(beautiful-spinner)::before,
+:where(beautiful-spinner)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--spinner-color);
+  mask: var(--spinner-track) center / contain no-repeat;
+}
+
+:where(beautiful-spinner)::before {
+  opacity: 0.2;
+}
+
+:where(beautiful-spinner)::after {
+  mask-image: var(--spinner-arc);
+  animation: spinner-turn var(--motion-spin) linear infinite;
+}
+
+:where(beautiful-spinner[data-size="md"]) {
+  --spinner-size: var(--spinner-md);
+}
+
+:where(beautiful-spinner[data-size="lg"]) {
+  --spinner-size: var(--spinner-lg);
+}
+
+:where(beautiful-spinner[data-color="accent"]) {
+  --spinner-color: var(--color-accent);
+}
+
+:where(beautiful-spinner[data-delay="none"]) {
+  animation: none;
+}
+
+/* Its words beside the ring: the ring takes the start of the line, as an icon does in a Button. */
+:where(beautiful-spinner[data-label="visible"]) {
+  inline-size: auto;
+  block-size: auto;
+  min-block-size: var(--spinner-size);
+  padding-inline-start: calc(var(--spinner-size) + var(--space-2));
+  vertical-align: baseline;
+  overflow: visible;
+  white-space: normal;
+  text-indent: 0;
+}
+
+:where(beautiful-spinner[data-label="visible"])::before,
+:where(beautiful-spinner[data-label="visible"])::after {
+  /* Centered on the first line, so words that wrap stay beside it as an icon's do. */
+  inset-block: calc((1lh - var(--spinner-size)) / 2) auto;
+  inset-inline-end: auto;
+  inline-size: var(--spinner-size);
+  block-size: var(--spinner-size);
+}
+
+/* A larger ring stands over its words, both centered, as a panel's or a page's loading state. */
+:where(beautiful-spinner[data-label="visible"]:is([data-size="md"], [data-size="lg"])) {
+  padding-inline-start: 0;
+  padding-block-start: calc(var(--spinner-size) + var(--space-3));
+  text-align: center;
+}
+
+:where(beautiful-spinner[data-label="visible"]:is([data-size="md"], [data-size="lg"]))::before,
+:where(beautiful-spinner[data-label="visible"]:is([data-size="md"], [data-size="lg"]))::after {
+  inset-inline: 0;
+  inset-block: 0 auto;
+  margin-inline: auto;
+}
+
+/* No turning: the arc holds still, and the whole ring breathes, so it still reads as working. */
+@media (prefers-reduced-motion: reduce) {
+  :where(beautiful-spinner)::after {
+    mask-image: var(--spinner-track);
+    animation: spinner-breathe calc(var(--motion-spin) * 2) var(--ease-in-out) infinite alternate;
+  }
+}
+
+/* Forced colors drop backgrounds, so the ring takes the system's text color. */
+@media (forced-colors: active) {
+  :where(beautiful-spinner)::before,
+  :where(beautiful-spinner)::after {
+    background: CanvasText;
+    forced-color-adjust: none;
+  }
+}
+
+@keyframes spinner-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes spinner-turn {
+  to {
+    rotate: 1turn;
+  }
+}
+
+@keyframes spinner-breathe {
+  from {
+    opacity: 0.25;
+  }
+}

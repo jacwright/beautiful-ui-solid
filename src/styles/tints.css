@@ -1,0 +1,91 @@
+/*
+ * Tints: the kit's set of colors for labeling things, shared by Badge and Chip. Each color is a
+ * hue name, as in Catalyst. Any element with data-color, and every Badge and Chip, gets five
+ * properties of its own to paint with:
+ *
+ *   --tint-fill      a soft wash of the hue, for the background
+ *   --tint-ink       text on that wash: 4.5:1 on it, on the canvas, a raised surface and a glass panel
+ *   --tint-edge      a hairline of the hue, so the wash keeps its shape on a surface of a near color
+ *   --tint-solid     the hue at full strength, for the strong look
+ *   --tint-on-solid  text on --tint-solid, 4.5:1
+ *
+ * --tint is the hue itself (Tailwind's 500), for a dot or an icon. Neutral is the default.
+ * The washes are see-through, so a tint reads on any surface. Light ink is the 800, dark the 300.
+ * The warm hues are too light for white text at full strength, so their strong look is the 400
+ * with the 950 on it, and the deep hues are the 600 (or the kit's fill) with white.
+ *
+ * The rules only set properties, so a Button or Link that uses data-color for its own colors is
+ * left as it is. Every selector sits in :where(), so its specificity is 0.
+ */
+:where([data-color], beautiful-badge, beautiful-chip) {
+  --tint: #71717a;
+  --tint-ink: light-dark(#3f3f46, #d4d4d8);
+  --tint-solid: var(--color-neutral-fill);
+  --tint-on-solid: var(--color-on-fill);
+  --tint-fill: light-dark(color-mix(in srgb, var(--tint) 12%, transparent), color-mix(in srgb, var(--tint) 15%, transparent));
+  --tint-edge: light-dark(color-mix(in srgb, var(--tint) 20%, transparent), color-mix(in srgb, var(--tint) 24%, transparent));
+}
+
+/* Accent follows the theme's accent, so it changes with an app's brand. Its ink is the accent mixed 30% of the way to the text. */
+:where([data-color="accent"]) {
+  --tint: var(--color-accent);
+  --tint-ink: color-mix(in oklab, var(--color-accent) 70%, var(--color-text));
+  --tint-solid: var(--color-accent-fill);
+  --tint-on-solid: var(--color-on-fill);
+}
+
+:where([data-color="red"]) {
+  --tint: #ef4444;
+  --tint-ink: light-dark(#991b1b, #fca5a5);
+  --tint-solid: var(--color-danger-fill);
+  --tint-on-solid: var(--color-on-fill);
+}
+
+:where([data-color="orange"]) {
+  --tint: #f97316;
+  --tint-ink: light-dark(#9a3412, #fdba74);
+  --tint-solid: #fb923c;
+  --tint-on-solid: #431407;
+}
+
+:where([data-color="yellow"]) {
+  --tint: #eab308;
+  --tint-ink: light-dark(#854d0e, #fde047);
+  --tint-solid: #facc15;
+  --tint-on-solid: #422006;
+}
+
+:where([data-color="green"]) {
+  --tint: #22c55e;
+  --tint-ink: light-dark(#166534, #86efac);
+  --tint-solid: #4ade80;
+  --tint-on-solid: #052e16;
+}
+
+:where([data-color="teal"]) {
+  --tint: #14b8a6;
+  --tint-ink: light-dark(#115e59, #5eead4);
+  --tint-solid: #2dd4bf;
+  --tint-on-solid: #042f2e;
+}
+
+:where([data-color="blue"]) {
+  --tint: #3b82f6;
+  --tint-ink: light-dark(#1e40af, #93c5fd);
+  --tint-solid: #2563eb;
+  --tint-on-solid: #ffffff;
+}
+
+:where([data-color="purple"]) {
+  --tint: #a855f7;
+  --tint-ink: light-dark(#6b21a8, #d8b4fe);
+  --tint-solid: #9333ea;
+  --tint-on-solid: #ffffff;
+}
+
+:where([data-color="pink"]) {
+  --tint: #ec4899;
+  --tint-ink: light-dark(#9d174d, #f9a8d4);
+  --tint-solid: #db2777;
+  --tint-on-solid: #ffffff;
+}

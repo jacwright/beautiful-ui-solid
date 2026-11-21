@@ -1,0 +1,251 @@
+/*
+ * Websites: the layout of a marketing page or a blog post, on the kit's tokens. Load it after
+ * styles.css. Apps don't need it. The spec is the docs site's Websites guide.
+ *
+ * The hooks are native elements and data attributes, as in the rest of the kit. Where no semantic
+ * element fits, a beautiful-* element is the hook:
+ *
+ *   data-section   On a <section>, <article>, <header> or <footer>: white (--color-page), the gutter
+ *                  at the sides, --space-section above and below, and its blocks one under another,
+ *                  each at the page's width. "band" sets it on the soft gray (--color-band), apart
+ *                  from the sections around it. "bar" is a site's header or footer: the same sides,
+ *                  and less space above and below.
+ *                  data-stage adds soft washes of indigo and marigold behind it, for glass to catch.
+ *   data-width     prose, wide or page. Caps a block at that width and centers it.
+ *   data-eyebrow   On a <p>: a small label over a headline, in indigo: "For authors", "Recipe".
+ *   beautiful-hero The top of a landing page: headline, the line under it, and its actions.
+ *                  data-align="center" centers them.
+ *   beautiful-row  Things side by side that wrap, such as a hero's buttons. data-row does the same
+ *                  on a <nav> or a list. data-align="between" pushes the first and last apart, as
+ *                  in a site's header and footer.
+ *   beautiful-grid Blocks side by side, as many as fit at 16rem each, such as features.
+ *   beautiful-prose
+ *                  A blog post's body: 18px text, and the space between its paragraphs, headings,
+ *                  lists, quotes, code and figures.
+ *   data-illustration
+ *                  On a <figure>: an illustration on its paper, and its caption. "spot" draws it
+ *                  small, beside a feature's words.
+ *   data-logo      On the <svg> that draws the logo: its height in the header, 2rem.
+ *
+ * Highlights are indigo and marigold only: an eyebrow, a quote's rule, and a <mark>, a marigold
+ * highlighter stroke over the words that matter. Buttons and links stay ink and cobalt.
+ *
+ * Every selector sits in :where(), so its specificity is 0, and a site's own unlayered rule wins. The
+ * web layer comes after the kit's layers, so it also wins over the kit's elements and theme.
+ * data-stage and data-section="band" don't combine: the band's flat gray is drawn over the stage.
+ */
+@layer web {
+  :where([data-section]) {
+    display: grid;
+    /* One column that may shrink below its content, so a long line wraps instead of widening the page. */
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8);
+    padding: var(--space-section) var(--space-gutter);
+    background: var(--color-page);
+  }
+
+  /* Two washes on white, like watercolor bleeding in from the corners. */
+  :where([data-section][data-stage]) {
+    background:
+      radial-gradient(44rem 30rem at 8% 0%, var(--stage-indigo), transparent 70%),
+      radial-gradient(36rem 28rem at 96% 100%, var(--stage-marigold), transparent 70%),
+      var(--color-page);
+  }
+
+  :where([data-section="band"]) {
+    background: var(--color-band);
+  }
+
+  :where([data-section="bar"]) {
+    padding-block: var(--space-4);
+  }
+
+  /* A section's blocks keep to the page's width, unless one asks for another. A bare picture keeps its own size. */
+  :where([data-section] > :not(img, svg, picture)) {
+    inline-size: 100%;
+    max-inline-size: var(--width-page);
+    margin-inline: auto;
+  }
+
+  :where([data-eyebrow]) {
+    font-size: var(--text-sm);
+    line-height: var(--leading-sm);
+    font-weight: 600;
+    color: var(--color-indigo);
+  }
+
+  /* A highlighter stroke: marigold behind ink, in both modes, with a little room around the words. */
+  :where(mark) {
+    padding-inline: var(--space-1);
+    border-radius: var(--radius-xs);
+    background: var(--color-marigold);
+    color: var(--color-on-marigold);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
+  :where([data-width="prose"]) {
+    max-inline-size: var(--width-prose);
+    margin-inline: auto;
+  }
+
+  :where([data-width="wide"]) {
+    max-inline-size: var(--width-wide);
+    margin-inline: auto;
+  }
+
+  :where([data-width="page"]) {
+    max-inline-size: var(--width-page);
+    margin-inline: auto;
+  }
+
+  /* The headline, then the line under it, then the buttons a little further down. */
+  :where(beautiful-hero) {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-4);
+
+    > :where(p) {
+      max-inline-size: var(--width-prose);
+    }
+
+    > :where(beautiful-row, [data-row]) {
+      margin-block-start: var(--space-4);
+    }
+  }
+
+  :where(beautiful-hero[data-align="center"]) {
+    justify-items: center;
+    text-align: center;
+
+    > :where(beautiful-row, [data-row]) {
+      justify-content: center;
+    }
+  }
+
+  :where(beautiful-row, [data-row]) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-6);
+  }
+
+  :where(:is(beautiful-row, [data-row])[data-align="between"]) {
+    justify-content: space-between;
+  }
+
+  :where(beautiful-grid) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+    gap: var(--space-8) var(--space-6);
+
+    /* Each block's own parts sit close: a spot illustration, a title, its words. A card has its own. */
+    > :where(:not(beautiful-card, [data-card])) {
+      display: grid;
+      align-content: start;
+      gap: var(--space-2);
+    }
+  }
+
+  /*
+   * A blog post. Blocks follow each other at one step, and a heading takes more space above it than
+   * under it, so it reads with the section it starts. Figures, quotes and code take more room.
+   */
+  :where(beautiful-prose) {
+    display: block;
+    font-size: var(--text-lg);
+    line-height: var(--leading-lg);
+
+    > :where(* + *) {
+      margin-block-start: var(--space-5);
+    }
+
+    > :where(* + h2) {
+      margin-block-start: var(--space-12);
+    }
+
+    > :where(* + :is(h3, h4)) {
+      margin-block-start: var(--space-8);
+    }
+
+    > :where(:is(h2, h3, h4) + *) {
+      margin-block-start: var(--space-3);
+    }
+
+    > :where(* + :is(figure, pre, blockquote)),
+    > :where(:is(figure, pre, blockquote) + *) {
+      margin-block-start: var(--space-8);
+    }
+
+    /* Headings a step up from the 18px text, so they stand apart from it. A Heading with a size keeps it. */
+    > :where(h2:not([data-size])) {
+      font-size: var(--text-2xl);
+      line-height: var(--leading-2xl);
+      letter-spacing: var(--tracking-tight);
+    }
+
+    > :where(h3:not([data-size])) {
+      font-size: var(--text-xl);
+      line-height: var(--leading-xl);
+    }
+
+    > :where(ul, ol) {
+      padding-inline-start: var(--space-6);
+    }
+
+    :where(li + li) {
+      margin-block-start: var(--space-2);
+    }
+
+    > :where(blockquote) {
+      padding-inline-start: var(--space-5);
+      border-inline-start: 2px solid var(--color-indigo);
+      font-size: var(--text-xl);
+      line-height: var(--leading-xl);
+    }
+
+    > :where(pre) {
+      padding: var(--space-4);
+      overflow-x: auto;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-raised);
+      line-height: var(--leading-sm);
+    }
+  }
+
+  /*
+   * An illustration is painted on warm paper, and it stays on its paper in dark mode: dimming or
+   * inverting a watercolor muddies it. The card's corners are the only frame.
+   */
+  :where(figure[data-illustration]) {
+    display: grid;
+    gap: var(--space-3);
+
+    > :where(img, svg) {
+      display: block;
+      inline-size: 100%;
+      block-size: auto;
+      border-radius: var(--radius-xl);
+      background: var(--color-paper);
+    }
+
+    > :where(figcaption) {
+      max-inline-size: var(--width-prose);
+      font-size: var(--text-sm);
+      line-height: var(--leading-sm);
+      color: var(--color-text-muted);
+    }
+  }
+
+  :where(figure[data-illustration="spot"] > :is(img, svg)) {
+    inline-size: var(--illustration-spot);
+    border-radius: var(--radius-lg);
+  }
+
+  :where(svg[data-logo]) {
+    display: block;
+    block-size: var(--space-8);
+    inline-size: auto;
+  }
+}

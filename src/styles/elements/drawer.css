@@ -1,0 +1,90 @@
+/*
+ * Drawer: a Dialog that slides in from an edge of the screen. It is the same <dialog>, with the
+ * same parts, surface and backdrop (dialog.css, surface.css), and data-drawer names the edge:
+ * start, end (the default the component writes), top or bottom. start and end follow the
+ * writing direction, so start is the left in English and the right in Arabic.
+ *
+ * It floats --drawer-gap in from its edge and the two beside it, with all four corners rounded,
+ * as Alert's bottom card does on a phone. A side drawer (start, end) fills the screen's height and
+ * is --drawer-width wide, but always leaves --drawer-reach of backdrop beside it to tap. A top or
+ * bottom drawer fills the width and is as tall as its content, up to 85% of the screen.
+ *
+ * It slides in from beyond its edge over --motion-enter, easing out with no overshoot, and slides
+ * back over --motion-exit. Under reduced motion it fades, as Dialog does.
+ */
+dialog[data-drawer] {
+  --drawer-width: 28rem;
+  --drawer-gap: var(--space-2);
+  --drawer-reach: var(--space-12);
+  /* Which way a side drawer slides in: 1 from the end, -1 from the start. */
+  --drawer-sign: 1;
+  --dialog-ease: var(--ease-sheet);
+
+  /* The gap clears a phone's notch and home indicator when the page sets viewport-fit=cover. */
+  margin:
+    calc(var(--drawer-gap) + env(safe-area-inset-top))
+    calc(var(--drawer-gap) + env(safe-area-inset-right))
+    calc(var(--drawer-gap) + env(safe-area-inset-bottom))
+    calc(var(--drawer-gap) + env(safe-area-inset-left));
+}
+
+/* Side drawers: the screen's full height, less the margins, which the panel stretches between. */
+dialog:is([data-drawer="start"], [data-drawer="end"]) {
+  --dialog-from: translateX(calc(var(--drawer-sign) * (100% + var(--drawer-gap))));
+
+  width: min(100% - var(--drawer-gap) - var(--drawer-reach), var(--drawer-width));
+  height: auto;
+  max-height: none;
+}
+
+dialog[data-drawer="start"] {
+  --drawer-sign: -1;
+
+  margin-inline-end: auto;
+}
+
+dialog[data-drawer="end"] {
+  margin-inline-start: auto;
+}
+
+/* Right to left, start is the right edge and end the left, so each slides the other way. */
+dialog[data-drawer="start"]:dir(rtl) { --drawer-sign: 1; }
+dialog[data-drawer="end"]:dir(rtl) { --drawer-sign: -1; }
+
+/* Top and bottom drawers: the full width, as tall as their content. */
+dialog:is([data-drawer="top"], [data-drawer="bottom"]) {
+  width: auto;
+  max-height: 85dvh;
+}
+
+dialog[data-drawer="top"] {
+  --dialog-from: translateY(calc(-100% - var(--drawer-gap) - env(safe-area-inset-top)));
+
+  margin-block-end: auto;
+}
+
+dialog[data-drawer="bottom"] {
+  --dialog-from: translateY(calc(100% + var(--drawer-gap) + env(safe-area-inset-bottom)));
+
+  margin-block-start: auto;
+}
+
+/* With no body to fill the height, the actions still sit at the bottom of a side drawer. */
+:where(dialog[data-drawer], dialog[data-drawer] > form) > footer:not(beautiful-dialog-body ~ footer) {
+  margin-block-start: auto;
+}
+
+dialog[data-drawer][data-size="sm"] { --drawer-width: 20rem; }
+dialog[data-drawer][data-size="lg"] { --drawer-width: 40rem; }
+
+/* Reduced motion: a plain fade with no movement, as Dialog's. */
+@media (prefers-reduced-motion: reduce) {
+  dialog[data-drawer] {
+    --dialog-from: none;
+  }
+}
+
+/* A drawer that holds a Sidebar, as an app's menu on a phone does, gives the sidebar its whole panel: the sidebar pads its own parts. */
+dialog[data-drawer]:has(> nav[data-sidebar]) {
+  padding: var(--surface-bezel);
+}

@@ -1,0 +1,196 @@
+/*
+ * Tabs: a row of tabs that each show one panel in the same place. The APG tabs pattern's markup:
+ *
+ *   <beautiful-tabs>
+ *     <beautiful-tab-list role="tablist" aria-label="…">
+ *       <button type="button" role="tab" aria-selected="true" aria-controls="…">…</button>
+ *       <button type="button" role="tab" aria-selected="false" aria-controls="…" tabindex="-1">…</button>
+ *     </beautiful-tab-list>
+ *     <beautiful-tab-panel role="tabpanel" aria-labelledby="…" tabindex="0">…</beautiful-tab-panel>
+ *     <beautiful-tab-panel role="tabpanel" aria-labelledby="…" tabindex="0" hidden>…</beautiful-tab-panel>
+ *   </beautiful-tabs>
+ *
+ *   aria-orientation="vertical", on the tab list, stands the tabs in a column beside the panels.
+ *
+ * <beautiful-tabs> lays out the list and its panels. A tab is a <button>, restyled from Button's
+ * look to a label with a line under it. The selected tab's line is the tablist's ::after, placed
+ * on that tab with anchor positioning, so it glides from one tab to the next with no script. Where
+ * anchor positioning is missing, the selected tab draws its own line and nothing moves. Every
+ * selector sits in :where(), so its specificity is 0, and this file comes after button.css.
+ */
+:where(beautiful-tabs) {
+  /* The faint line the tabs stand on, and the selected tab's line over it. */
+  --tab-track: color-mix(in oklab, var(--color-text) 12%, transparent);
+  --tab-hover-line: color-mix(in oklab, var(--color-text) 24%, transparent);
+  --tab-line: 2px;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  /* In a flex or grid parent, the row of tabs scrolls rather than widening the page. */
+  min-inline-size: 0;
+}
+
+:where(beautiful-tabs:has(> beautiful-tab-list[aria-orientation="vertical"])) {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--space-6);
+}
+
+/*
+ * The tablist scrolls sideways when its tabs don't fit, as on a phone. A scroller clips, so it
+ * pads itself by --space-1 for the focus ring and takes the space back with a negative margin:
+ * the tabs sit where they would with neither.
+ */
+:where(beautiful-tab-list) {
+  position: relative;
+  display: flex;
+  gap: var(--space-4);
+  margin: calc(-1 * var(--space-1));
+  padding: var(--space-1);
+  overflow: auto hidden;
+  scrollbar-width: none;
+  /* The track: a hairline under the tabs, across the whole scrolled width. */
+  background: linear-gradient(var(--tab-track), var(--tab-track)) no-repeat local;
+  background-position: var(--space-1) calc(100% - var(--space-1));
+  background-size: calc(100% - 2 * var(--space-1)) 1px;
+  anchor-scope: --tab-selected;
+}
+
+:where(beautiful-tab-list[aria-orientation="vertical"]) {
+  flex: none;
+  flex-direction: column;
+  gap: 0;
+  overflow: visible;
+  background-position: calc(100% - var(--space-1)) var(--space-1);
+  background-size: 1px calc(100% - 2 * var(--space-1));
+}
+
+/* A tab: its label, and an optional leading icon. Button's fill, edge, rim and press are left off. */
+:where(beautiful-tab-list) :where([role="tab"]) {
+  flex: none;
+  justify-content: flex-start;
+  gap: var(--space-2);
+  min-height: var(--control-height);
+  padding: var(--space-1);
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  background: none;
+  backdrop-filter: none;
+  box-shadow: none;
+  font-weight: 500;
+  white-space: nowrap;
+  transform: none;
+}
+
+:where(beautiful-tab-list) :where([role="tab"])::before {
+  content: none;
+}
+
+:where(beautiful-tab-list[aria-orientation="vertical"]) :where([role="tab"]) {
+  padding-inline: var(--space-3);
+}
+
+:where(beautiful-tab-list) :where([role="tab"][aria-selected="true"]) {
+  color: var(--color-text);
+  anchor-name: --tab-selected;
+}
+
+/*
+ * A tab's own line, its ::after: under it, or at its end in a column, square to the tab's edge
+ * whatever the tab's corners. It shows while the pointer is over another tab, in a fainter color,
+ * and is the selected tab's line where anchor positioning is missing.
+ */
+:where(beautiful-tab-list) :where([role="tab"])::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  block-size: var(--tab-line);
+  border-radius: var(--tab-line) var(--tab-line) 0 0;
+  background: var(--tab-hover-line);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-quick) var(--ease-out);
+}
+
+:where(beautiful-tab-list[aria-orientation="vertical"]) :where([role="tab"])::after {
+  inset-inline: auto 0;
+  inset-block: 0;
+  inline-size: var(--tab-line);
+  block-size: auto;
+  border-radius: var(--tab-line) 0 0 var(--tab-line);
+}
+
+/* The pointer over another tab: its label takes the text color, and its fainter line shows. */
+@media (hover: hover) {
+  :where(beautiful-tab-list) :where([role="tab"]:not([aria-selected="true"], :disabled):hover) {
+    color: var(--color-text);
+  }
+
+  :where(beautiful-tab-list) :where([role="tab"]:not([aria-selected="true"], :disabled):hover)::after {
+    opacity: 1;
+  }
+}
+
+/*
+ * The selected tab's line: the tablist's ::after, on the selected tab's bottom edge (or its end
+ * edge, in a column). When another tab is selected, the line glides to it.
+ */
+@supports (anchor-name: --a) {
+  :where(beautiful-tab-list:has([role="tab"][aria-selected="true"]))::after {
+    content: "";
+    position: absolute;
+    position-anchor: --tab-selected;
+    inset-inline: anchor(start) anchor(end);
+    inset-block-end: anchor(end);
+    block-size: var(--tab-line);
+    border-radius: var(--tab-line) var(--tab-line) 0 0;
+    background: var(--color-accent);
+    pointer-events: none;
+    transition:
+      inset-inline var(--motion-slide) var(--ease-in-out),
+      inset-block var(--motion-slide) var(--ease-in-out);
+  }
+
+  :where(beautiful-tab-list[aria-orientation="vertical"]:has([role="tab"][aria-selected="true"]))::after {
+    inset-inline: auto anchor(end);
+    inset-block: anchor(start) anchor(end);
+    inline-size: var(--tab-line);
+    block-size: auto;
+    border-radius: var(--tab-line) 0 0 var(--tab-line);
+  }
+}
+
+@supports not (anchor-name: --a) {
+  :where(beautiful-tab-list) :where([role="tab"][aria-selected="true"])::after {
+    background: var(--color-accent);
+    opacity: 1;
+  }
+}
+
+/* A panel takes focus when it has nothing focusable at its start, so it shows the ring around its content. */
+:where(beautiful-tab-panel) {
+  display: block;
+  flex: 1;
+  min-inline-size: 0;
+  border-radius: var(--radius-sm);
+}
+
+/* A custom element's display here would beat the browser's own [hidden] rule, so hidden is restated. */
+:where(beautiful-tab-panel[hidden]) {
+  display: none;
+}
+
+/* Forced colors drop the line's background, so it takes the system's highlight. */
+@media (forced-colors: active) {
+  :where(beautiful-tab-list)::after,
+  :where(beautiful-tab-list) :where([role="tab"][aria-selected="true"])::after {
+    background: Highlight;
+  }
+
+  :where(beautiful-tab-list) :where([role="tab"][aria-selected="true"]) {
+    color: Highlight;
+  }
+}

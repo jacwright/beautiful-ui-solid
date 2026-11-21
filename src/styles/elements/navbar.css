@@ -1,0 +1,245 @@
+/*
+ * Navbar: a row of links across the top of an app or a site, on a native <nav data-navbar>.
+ *
+ * Its children: items, sections, a divider and a spacer.
+ *   Item:    an <a href>, or a <button> such as a Dropdown's. A primary or tertiary Button
+ *            (data-variant), or a link styled as a Button (data-button), keeps Button's look.
+ *            A secondary <button> writes no data-variant, so it takes the item look.
+ *   Section: <beautiful-navbar-section>, a group of items, closer together.
+ *   Divider: an <hr>, standing upright.
+ *   Spacer:  <beautiful-navbar-spacer>, which pushes what follows it to the end.
+ *
+ * The current page's item has aria-current="page". The nav's own ::after draws the bar under it,
+ * placed with anchor positioning, so the bar glides when the current item changes. A browser
+ * without anchor positioning draws the bar on the item, where it doesn't glide.
+ *
+ * A row that doesn't fit scrolls sideways, and fades at an edge that has more past it.
+ * Every selector sits in :where(), so its specificity is 0, and this file comes after
+ * link.css, button.css and dropdown.css.
+ */
+:where(nav[data-navbar]) {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  /*
+   * The bar sits on the bottom edge, under the padding. The padding is also the room a focus
+   * ring needs, because the scroller clips what is outside it.
+   */
+  padding: var(--space-2) var(--space-1);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  /* Focus and the browser scroll an item clear of the edge fades. */
+  scroll-padding-inline: var(--space-8);
+  /* A finger swipes, so no bar. A mouse wheel can't scroll sideways, so a thin one shows there. */
+  scrollbar-width: none;
+  anchor-scope: --navbar-current;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :where(nav[data-navbar]) {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--color-text) 20%, transparent) transparent;
+  }
+}
+
+/* A section: items closer together than the parts of the nav. */
+:where(nav[data-navbar]) > :where(beautiful-navbar-section:not([hidden])) {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Takes the free room, so the parts after it sit at the end. The negative margin cancels one gap. */
+:where(nav[data-navbar]) > :where(beautiful-navbar-spacer) {
+  flex: 1;
+  margin-inline-start: calc(-1 * var(--space-4));
+}
+
+/* A divider: an <hr> standing upright, as tall as an icon and a half. */
+:where(nav[data-navbar]) > :where(hr) {
+  flex: none;
+  align-self: center;
+  width: 0;
+  height: var(--space-6);
+  margin: 0;
+  border: 0;
+  border-inline-start: 1px solid color-mix(in oklab, currentColor 12%, transparent);
+}
+
+/*
+ * An item. A link or a button, restyled from Link's and Button's looks: the text color, no
+ * underline, no fill until the pointer is over it.
+ */
+:where(nav[data-navbar]) > :where(a:not([data-button]), button:not([data-variant])),
+:where(nav[data-navbar]) > :where(beautiful-navbar-section) > :where(a:not([data-button]), button:not([data-variant])) {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-width: var(--control-height);
+  min-height: var(--control-height);
+  padding: var(--space-1) var(--space-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  background: none;
+  backdrop-filter: none;
+  box-shadow: none;
+  font-size: var(--control-font-size);
+  font-weight: 500;
+  line-height: var(--leading-sm);
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transform: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--motion-quick) var(--ease-out);
+}
+
+/* Button's rim isn't drawn on an item. */
+:where(nav[data-navbar] button:not([data-variant], [popover] *))::before {
+  content: none;
+}
+
+/*
+ * An icon: muted until its item is hovered or current. Not in a menu the nav opens: a Dropdown's
+ * items keep their own icons.
+ */
+:where(nav[data-navbar] :is(a:not([data-button]), button:not([data-variant])):not([popover] *)) > :where(svg) {
+  flex: none;
+  width: var(--control-icon);
+  height: var(--control-icon);
+  color: var(--color-text-muted);
+  transition: color var(--motion-quick) var(--ease-out);
+}
+
+:where(nav[data-navbar] [aria-current="page"]:not([popover] *)) > :where(svg) {
+  color: inherit;
+}
+
+/* Hover only where there is a hovering pointer, so a tap doesn't leave an item lit. Tertiary Button's tints. */
+@media (hover: hover) {
+  :where(nav[data-navbar]) > :where(a:not([data-button]), button:not([data-variant])):where(:hover),
+  :where(nav[data-navbar]) > :where(beautiful-navbar-section) > :where(a:not([data-button]), button:not([data-variant])):where(:hover) {
+    background-color: color-mix(in oklab, var(--color-text) 8%, transparent);
+  }
+
+  :where(nav[data-navbar] :is(a:not([data-button]), button:not([data-variant])):not([popover] *):hover) > :where(svg) {
+    color: inherit;
+  }
+}
+
+/* Pressed, and a button whose menu is open: a deeper tint. No shrink: an item is a place, not an action. */
+:where(nav[data-navbar]) > :where(a:not([data-button]), button:not([data-variant])):where(:active),
+:where(nav[data-navbar]) > :where(beautiful-navbar-section) > :where(a:not([data-button]), button:not([data-variant])):where(:active),
+:where(nav[data-navbar] button:not([data-variant], [popover] *):has(+ :popover-open)) {
+  background-color: color-mix(in oklab, var(--color-text) 14%, transparent);
+}
+
+:where(nav[data-navbar] button:not([data-variant], [popover] *):has(+ :popover-open)) > :where(svg) {
+  color: inherit;
+}
+
+/*
+ * The current page's bar: 2px in the text color, as wide as the item's words, on the nav's
+ * bottom edge. The current item is the anchor, and anchor-scope keeps each nav's to itself.
+ */
+:where(nav[data-navbar]) > :where([aria-current="page"]),
+:where(nav[data-navbar]) > :where(beautiful-navbar-section) > :where([aria-current="page"]) {
+  anchor-name: --navbar-current;
+}
+
+:where(nav[data-navbar])::after {
+  content: none;
+  position: absolute;
+  position-anchor: --navbar-current;
+  bottom: 0;
+  left: calc(anchor(left) + var(--space-2));
+  right: calc(anchor(right) + var(--space-2));
+  height: 2px;
+  border-radius: var(--radius-xs);
+  background: var(--color-text);
+  pointer-events: none;
+  transition:
+    left var(--motion-slide) var(--ease-in-out),
+    right var(--motion-slide) var(--ease-in-out);
+}
+
+:where(nav[data-navbar]:has(> [aria-current="page"], > beautiful-navbar-section > [aria-current="page"]))::after {
+  content: "";
+}
+
+@supports not (anchor-name: --navbar-current) {
+  :where(nav[data-navbar])::after {
+    content: none;
+  }
+
+  :where(nav[data-navbar]) > :where([aria-current="page"])::after,
+  :where(nav[data-navbar]) > :where(beautiful-navbar-section) > :where([aria-current="page"])::after {
+    content: "";
+    position: absolute;
+    inset-inline: var(--space-2);
+    bottom: calc(-1 * var(--space-2));
+    height: 2px;
+    border-radius: var(--radius-xs);
+    background: var(--color-text);
+  }
+}
+
+/*
+ * The fades at a scrolled edge. The scroll position drives two custom properties, so an edge
+ * fades only when there is more past it. A row that fits has no scroll timeline, so no fade.
+ */
+@property --navbar-fade-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --navbar-fade-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes navbar-fade {
+  from {
+    --navbar-fade-start: 0px;
+    --navbar-fade-end: var(--space-8);
+  }
+  5%,
+  95% {
+    --navbar-fade-start: var(--space-8);
+    --navbar-fade-end: var(--space-8);
+  }
+  to {
+    --navbar-fade-start: var(--space-8);
+    --navbar-fade-end: 0px;
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  :where(nav[data-navbar]) {
+    mask: linear-gradient(
+      to right,
+      transparent,
+      #000 var(--navbar-fade-start),
+      #000 calc(100% - var(--navbar-fade-end)),
+      transparent
+    );
+    animation: navbar-fade linear both;
+    animation-timeline: scroll(self inline);
+  }
+}
+
+/* Forced colors drop the bar's fill, so it takes the text color the system picks. */
+@media (forced-colors: active) {
+  :where(nav[data-navbar])::after,
+  :where(nav[data-navbar]) :where([aria-current="page"])::after {
+    background: CanvasText;
+  }
+}

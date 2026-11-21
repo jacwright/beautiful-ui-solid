@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 222 40">
+<!-- A made-up horizontal lockup for the examples, in currentColor. A page draws it with <svg><use href="…#logo"/></svg>, so it takes the text color: ink in light mode, white in dark. The second word is the same color at 72%. -->
+<g id="logo" fill="currentColor">
+<path d="M20 2 38 36H2Z M20 14 11.5 30h17Z" fill-rule="evenodd" />
+<text x="50" y="31" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="30" font-weight="700" textLength="74" lengthAdjust="spacingAndGlyphs">Acme</text>
+<text x="132" y="31" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="30" font-weight="500" textLength="88" lengthAdjust="spacingAndGlyphs" fill-opacity=".72">Studio</text>
+</g>
+</svg>

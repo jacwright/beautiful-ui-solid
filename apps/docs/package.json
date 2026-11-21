@@ -1,0 +1,30 @@
+{
+  "name": "docs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "scripts/test.sh",
+    "typecheck": "tsc --noEmit",
+    "preview": "alias=$(git branch --show-current | tr A-Z a-z | tr -c 'a-z0-9\\n' - | cut -c1-40 | sed 's/^[^a-z]*//; s/-*$//') && test -n \"$alias\" || { echo 'preview needs a checked-out branch' >&2; exit 1; } && pnpm build && wrangler versions upload --preview-alias \"$alias\"",
+    "deploy": "test \"$(git branch --show-current)\" = main || { echo 'deploy runs from main only' >&2; exit 1; } && pnpm build && wrangler deploy",
+    "check": "test -n \"$DOCS_URL\" || { echo \"check needs DOCS_URL, the deployed site to check\" >&2; exit 1; } && playwright install chromium && playwright test"
+  },
+  "dependencies": {
+    "beautiful-ui-solid-editor": "workspace:*",
+    "beautiful-ui-solid": "workspace:*",
+    "@solidjs/web": "2.0.3",
+    "solid-js": "2.0.3"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "catalog:",
+    "@playwright/test": "catalog:",
+    "@solidjs/vite-plugin": "3.0.1",
+    "@types/node": "22.20.5",
+    "typescript": "^7.0.2",
+    "vite": "catalog:",
+    "wrangler": "catalog:"
+  }
+}

@@ -1,0 +1,264 @@
+/*
+ * Toast: a short message at the edge of the screen that goes away by itself.
+ *
+ * The stack is <beautiful-toaster role="region" aria-label="Notifications" aria-live="polite">,
+ * and each toast a <beautiful-toast tabindex="-1"> in it, oldest first. On a page the stack is popover="manual" and
+ * kept open from the start (toaster.ts), so it sits in the top layer above everything, and
+ * the live region is there before the first message. Without popover, as in the docs'
+ * static examples, the stack sits in the page where it is.
+ *
+ *   data-placement on the stack: "bottom end" (the default), "bottom", "bottom start",
+ *                "top end", "top", "top start". The newest toast is nearest the edge.
+ *   data-tone on a toast: success or danger, drawn as an icon. Left out, it has none.
+ *
+ * A toast's parts are its direct children, in this order:
+ *   <p> the message, <p> an optional second line, <button> an optional action, and
+ *   <button data-dismiss aria-label="Dismiss"> the close button, its × drawn with a mask.
+ *
+ * Every selector sits in :where(), so its specificity is 0. The stack is a popover, so its
+ * rules come after popover.css and undo that panel's look. The rim is in surface.css.
+ */
+:where(beautiful-toaster) {
+  --toast-width: 24rem;
+  /* Where a toast enters from, and where it leaves to. The placement sets both. */
+  --toast-from: translateY(100%);
+  --toast-out: translateX(calc(100% + var(--space-4)));
+
+  /* A leaving toast is held against it, out of the flow. */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  width: min(var(--toast-width), 100%);
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  color: var(--color-text);
+  background: none;
+  backdrop-filter: none;
+  box-shadow: none;
+  font-size: var(--text-sm);
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+/* A stack that isn't open, such as before its script runs, stays hidden, as any popover does. */
+:where(beautiful-toaster[popover]:not(:popover-open)) {
+  display: none;
+}
+
+/* The stack draws nothing of its own: only its toasts. */
+:where(beautiful-toaster)::before {
+  content: none;
+}
+
+/*
+ * On a page: fixed to a corner, 1rem in, and clear of a phone's home bar. The empty space in the
+ * stack takes no clicks, so it never covers the page.
+ */
+:where(beautiful-toaster[popover]) {
+  position: fixed;
+  inset: auto;
+  inset-block-end: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  inset-inline-end: calc(var(--space-4) + env(safe-area-inset-right, 0px));
+  max-height: none;
+  margin: 0;
+  position-area: none;
+  position-try-fallbacks: none;
+  pointer-events: none;
+}
+
+:where(beautiful-toaster[popover]):where([data-placement="bottom start"], [data-placement="top start"]) {
+  inset-inline: calc(var(--space-4) + env(safe-area-inset-left, 0px)) auto;
+}
+
+:where(beautiful-toaster[popover]):where([data-placement="bottom"], [data-placement="top"]) {
+  inset-inline: 0;
+  margin-inline: auto;
+}
+
+:where(beautiful-toaster[popover]):where([data-placement^="top"]) {
+  inset-block: calc(var(--space-4) + env(safe-area-inset-top, 0px)) auto;
+}
+
+/* At the top the newest toast is the top one, and toasts drop in from above. */
+:where(beautiful-toaster):where([data-placement^="top"]) {
+  --toast-from: translateY(-100%);
+
+  flex-direction: column-reverse;
+}
+
+:where(beautiful-toaster):where([data-placement="bottom start"], [data-placement="top start"]) {
+  --toast-out: translateX(calc(-100% - var(--space-4)));
+}
+
+/* A centered toast leaves the way it came. */
+:where(beautiful-toaster):where([data-placement="bottom"]) {
+  --toast-out: translateY(100%);
+}
+
+:where(beautiful-toaster):where([data-placement="top"]) {
+  --toast-out: translateY(-100%);
+}
+
+/* On a phone the stack spans the screen, 1rem in from each side. */
+@media (width < 40rem) {
+  :where(beautiful-toaster[popover]) {
+    inset-inline: calc(var(--space-4) + env(safe-area-inset-left, 0px)) calc(var(--space-4) + env(safe-area-inset-right, 0px));
+    width: auto;
+    margin-inline: 0;
+  }
+}
+
+/*
+ * A toast: a popup's pane, wide as the stack. The message, its second line, then the buttons in
+ * a row at the end, centered on the text. With a tone, an icon comes first.
+ */
+:where(beautiful-toaster > beautiful-toast) {
+  --rim-radius: var(--radius-lg);
+  /* Muted text inside takes the surface's stronger shade, as in Popover. */
+  --color-text-muted: var(--surface-text-muted);
+  --toast-icon: none;
+  --toast-icon-color: currentColor;
+  /* The close button and an action: a little smaller than a control, so a toast stays slim. */
+  --toast-button: calc(var(--control-height) - var(--space-2));
+
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-columns: auto;
+  column-gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border: 1px solid var(--surface-edge);
+  border-radius: var(--rim-radius);
+  background-color: var(--popup-fill);
+  background-image: var(--surface-sheen);
+  backdrop-filter: blur(var(--popup-blur)) saturate(var(--surface-saturate));
+  box-shadow: var(--shadow-popup);
+  line-height: var(--leading-sm);
+  pointer-events: auto;
+  /* A sideways swipe dismisses it. Scrolling the page up and down still works. */
+  touch-action: pan-y;
+
+  /* Entering: up from the edge, with a little spring, and a fade. Slower than leaving. */
+  transition:
+    opacity var(--motion-enter) var(--ease-out),
+    transform var(--motion-enter) var(--ease-spring);
+
+  @starting-style {
+    opacity: 0;
+    transform: var(--toast-from);
+  }
+}
+
+/* The message, and the line under it. Both are placed, so the buttons flow into the columns after. */
+:where(beautiful-toaster > beautiful-toast > p) {
+  grid-row: 1;
+  grid-column: 1;
+  margin: 0;
+}
+
+:where(beautiful-toaster > beautiful-toast > p:first-of-type) {
+  font-weight: 500;
+}
+
+:where(beautiful-toaster > beautiful-toast > p + p) {
+  grid-row: 2;
+  color: var(--color-text-muted);
+}
+
+/* The buttons sit beside the text, both lines when there are two, in columns of their own. */
+:where(beautiful-toaster > beautiful-toast > button) {
+  grid-row: 1;
+  min-height: var(--toast-button);
+  padding-inline: calc(var(--space-2) - 1px);
+}
+
+:where(beautiful-toaster > beautiful-toast:has(> p + p) > button) {
+  grid-row: 1 / span 2;
+}
+
+:where(beautiful-toaster > beautiful-toast > button[data-dismiss]) {
+  width: var(--toast-button);
+  padding: 0;
+  color: var(--color-text-muted);
+}
+
+/* The ×, in the button's text color. */
+:where(beautiful-toaster > beautiful-toast > button[data-dismiss])::after {
+  content: "";
+  width: var(--control-icon);
+  height: var(--control-icon);
+  background-color: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='m6 6 8 8M14 6l-8 8'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+/* A tone puts its icon before the text, lined up with the message's line. */
+:where(beautiful-toaster > beautiful-toast[data-tone]) {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+:where(beautiful-toaster > beautiful-toast[data-tone] > p) {
+  grid-column: 2;
+}
+
+:where(beautiful-toaster > beautiful-toast[data-tone])::after {
+  content: "";
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: start;
+  width: 1.25rem;
+  height: var(--leading-sm);
+  background-color: var(--toast-icon-color);
+  mask: var(--toast-icon) center / contain no-repeat;
+}
+
+/* Where the second line wraps under a tall message, the icon stays on the first line. */
+:where(beautiful-toaster > beautiful-toast[data-tone]:not(:has(> p + p)))::after {
+  align-self: center;
+}
+
+:where(beautiful-toaster > beautiful-toast[data-tone="success"]) {
+  --toast-icon-color: var(--color-success);
+  --toast-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='10' cy='10' r='7.25'/%3E%3Cpath d='m7 10.25 2 2 4-4.5'/%3E%3C/svg%3E");
+}
+
+:where(beautiful-toaster > beautiful-toast[data-tone="danger"]) {
+  --toast-icon-color: var(--color-danger);
+  --toast-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round'%3E%3Ccircle cx='10' cy='10' r='7.25'/%3E%3Cpath d='M10 6.5v4'/%3E%3Cpath d='M10 13.5h.01' stroke-width='2'/%3E%3C/svg%3E");
+}
+
+/* Under a finger: it follows the swipe, with no lag. toaster.ts sets --toast-swipe. */
+:where(beautiful-toaster > beautiful-toast[data-swiping]) {
+  transform: translateX(var(--toast-swipe, 0px));
+  transition: none;
+}
+
+/*
+ * Leaving: out toward the edge it sits by, and a fade. Quicker than entering, easing in. It
+ * leaves the flow at once, held where it was (toaster.ts), so the rest glide into its place.
+ */
+:where(beautiful-toaster > beautiful-toast[data-leaving]) {
+  position: absolute;
+  inset-inline: 0;
+  opacity: 0;
+  transform: var(--toast-out);
+  pointer-events: none;
+  transition:
+    opacity var(--motion-exit) var(--ease-in),
+    transform var(--motion-exit) var(--ease-in);
+}
+
+/* Reduced motion: a plain fade, with no movement. A swipe still follows the finger. */
+@media (prefers-reduced-motion: reduce) {
+  :where(beautiful-toaster) {
+    --toast-from: none;
+    --toast-out: none;
+  }
+}

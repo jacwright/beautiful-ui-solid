@@ -1,0 +1,71 @@
+/*
+ * Heading: the native <h1> to <h6>. The level is the document's outline, and the size is the
+ * look. Each level has a size of its own, and data-size sets another without changing the level:
+ *
+ *   level   default size
+ *   h1      lg       24px on 32px lines
+ *   h2      md       20px on 28px lines
+ *   h3-h6   sm       16px on 24px lines
+ *
+ *   data-size: sm, md, lg, xl (30px on 36px) and display (36px to 48px, for a landing page).
+ *
+ * Every selector sits in :where(), so its specificity is 0, as in text.css. A component that
+ * owns its own heading, such as Dialog's title, styles it with any selector. Headings set no
+ * margin: the space around them belongs to what holds them. Nor color: a heading is the color of
+ * the text around it, so it reads on whatever surface holds it.
+ */
+:where(h1, h2, h3, h4, h5, h6) {
+  font-weight: var(--weight-strong);
+  /* A long word or URL breaks rather than overflowing, at every level. */
+  overflow-wrap: break-word;
+  /* Evens out the lines of a heading that wraps, where the browser supports it. */
+  text-wrap: balance;
+}
+
+/* Each level's own size. The data-size rules come after these, so at the same specificity they win. */
+:where(h1) {
+  font-size: var(--text-2xl);
+  line-height: var(--leading-2xl);
+  letter-spacing: var(--tracking-tight);
+}
+
+:where(h2) {
+  font-size: var(--text-xl);
+  line-height: var(--leading-xl);
+}
+
+:where(h3, h4, h5, h6) {
+  font-size: var(--text-base);
+  line-height: var(--leading);
+}
+
+:where(:is(h1, h2, h3, h4, h5, h6)[data-size="sm"]) {
+  font-size: var(--text-base);
+  line-height: var(--leading);
+  letter-spacing: normal;
+}
+
+:where(:is(h1, h2, h3, h4, h5, h6)[data-size="md"]) {
+  font-size: var(--text-xl);
+  line-height: var(--leading-xl);
+  letter-spacing: normal;
+}
+
+:where(:is(h1, h2, h3, h4, h5, h6)[data-size="lg"]) {
+  font-size: var(--text-2xl);
+  line-height: var(--leading-2xl);
+  letter-spacing: var(--tracking-tight);
+}
+
+:where(:is(h1, h2, h3, h4, h5, h6)[data-size="xl"]) {
+  font-size: var(--text-3xl);
+  line-height: var(--leading-3xl);
+  letter-spacing: var(--tracking-tight);
+}
+
+:where(:is(h1, h2, h3, h4, h5, h6)[data-size="display"]) {
+  font-size: var(--text-display);
+  font-weight: 700;
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-tighter);
+}

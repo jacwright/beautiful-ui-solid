@@ -1,0 +1,66 @@
+html {
+  /* Always reserve the scrollbar's space, so locking the scroll under a modal dialog shifts nothing. */
+  scrollbar-gutter: stable;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading);
+  letter-spacing: var(--tracking-text);
+  color: var(--color-text);
+  background: var(--color-canvas);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/*
+ * The ring follows its control's corners. Links and disclosure titles are square by default, so
+ * they get the least rounding. A component that sets its own radius wins: this is specificity 0.
+ * A native checkbox or radio can't be rounded (Chrome computes its radius as 0), so Checkbox and
+ * Radio draw their own box (docs/components.md).
+ */
+:where(a, summary) {
+  border-radius: var(--radius-xs);
+}
+
+/*
+ * While the moving ring glides to a control, the control's own outline waits for it (focus-ring.ts).
+ * Important in this early layer beats any later layer, so no component's outline shows through.
+ * A card that shows its link's ring (card.css) waits the same way.
+ */
+[data-focus-ring-gliding]:is(:focus-visible, :is(beautiful-card, [data-card]):has(a[data-card-link]:focus-visible), beautiful-tag-field:has(> input:focus-visible)) {
+  outline-color: transparent !important;
+}
+
+/* Words for screen readers only, such as a busy region's "Loading". Kept in the page, out of sight. */
+:where(beautiful-visually-hidden) {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+code,
+pre {
+  font-family: var(--font-mono);
+}
+
+/* A code block. Inline code sizes itself to the text around it (elements/text.css). */
+pre {
+  font-size: var(--text-sm);
+}
+
+/*
+ * iOS Safari zooms the page into a focused field whose text is under 16px. Fields inherit their
+ * font, so one in a 14px dialog body would zoom. Where the pointer is a finger, every field's text
+ * is at least 16px. Desktop keeps 14px. Not maximum-scale=1 in the viewport: on Android that also
+ * blocks pinch-zoom, which people need.
+ */
+@media (pointer: coarse) {
+  :where(input, select, textarea) {
+    font-size: max(var(--text-base), 1em);
+  }
+}

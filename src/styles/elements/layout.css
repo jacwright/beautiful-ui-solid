@@ -1,0 +1,118 @@
+/*
+ * What Stacked layout and Sidebar layout share: an app's page with a skip link, a <header> on top
+ * that holds the menu button, and the content in <main>, a pane on a wide screen and on the page
+ * on a narrow one. Each layout's own file places them: stacked-layout.css, sidebar-layout.css.
+ *
+ * Wide or narrow is the layout's own width, by container query, so a layout in a frame does the
+ * same as one on a whole screen. A container query can't read a custom property, so the
+ * breakpoint is 40rem, the width where Alert becomes a sheet.
+ */
+:is(beautiful-stacked-layout, beautiful-sidebar-layout) {
+  position: relative;
+  container-type: inline-size;
+}
+
+/* Skip to content: out of sight until it has focus, then at the top left over the header. */
+:is(beautiful-stacked-layout, beautiful-sidebar-layout) > a[data-skip]:not(:focus) {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+:is(beautiful-stacked-layout, beautiful-sidebar-layout) > a[data-skip]:focus {
+  position: absolute;
+  inset-block-start: var(--space-2);
+  inset-inline-start: var(--space-2);
+  z-index: 1;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-raised);
+  box-shadow: var(--shadow-card);
+}
+
+/* The banner: the menu button, then the Navbar. */
+:is(beautiful-stacked-layout, beautiful-sidebar-layout) > header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-inline: var(--space-4);
+}
+
+:is(beautiful-stacked-layout, beautiful-sidebar-layout) > header > nav[data-navbar] {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The content. On a narrow screen it sits on the page, with a phone's margins. */
+:is(beautiful-stacked-layout, beautiful-sidebar-layout) > main {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-6) var(--space-4);
+}
+
+/*
+ * The content's parts stack 24px apart, and the line under a title sits 8px under it, as in Auth
+ * layout's card. At no specificity, so a page's own spacing wins.
+ */
+:where(beautiful-stacked-layout, beautiful-sidebar-layout) > :where(main) > :where(* + *) {
+  margin-block-start: var(--space-6);
+}
+
+:where(beautiful-stacked-layout, beautiful-sidebar-layout) > :where(main) > :where(:is(h1, h2) + p) {
+  margin-block-start: var(--space-2);
+}
+
+@container (width < 40rem) {
+  /* No pane, so no rim (surface.css). */
+  :is(beautiful-stacked-layout, beautiful-sidebar-layout) > main::before {
+    content: none;
+  }
+}
+
+@container (width >= 40rem) {
+  /*
+   * Wide: the content is a pane, as a Card is. Each layout sets its margin and padding.
+   *
+   * The frosted fill is on ::after, not the pane: a backdrop-filter on <main> would make it the
+   * containing block of every position: fixed element in the app's content.
+   */
+  :is(beautiful-stacked-layout, beautiful-sidebar-layout) > main {
+    --rim-radius: var(--radius-lg);
+    --color-text-muted: var(--surface-text-muted);
+
+    position: relative;
+    isolation: isolate;
+    border: 1px solid var(--card-edge);
+    border-radius: var(--rim-radius);
+    box-shadow: var(--shadow-card);
+  }
+
+  :is(beautiful-stacked-layout, beautiful-sidebar-layout) > main::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: calc(var(--rim-radius) - 1px);
+    background-color: var(--card-fill);
+    background-image: var(--card-sheen);
+    backdrop-filter: var(--card-backdrop);
+    pointer-events: none;
+  }
+
+  /* The rim (surface.css) catches a Button's light, as a Card's does. */
+  :is(beautiful-stacked-layout, beautiful-sidebar-layout) > main::before {
+    background: var(--card-hotspot), var(--card-rim);
+  }
+
+  /*
+   * No menu button, since everything it opens shows. A drawer opened before the screen grew
+   * stays, so the page behind it is never inert under a dialog nobody can see. Escape still closes
+   * it, and the Solid component closes it on its own.
+   */
+  :is(beautiful-stacked-layout, beautiful-sidebar-layout) > header > button[data-icon-button] {
+    display: none;
+  }
+}

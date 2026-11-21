@@ -1,0 +1,183 @@
+/*
+ * Input: a native <input> of a text type, and <beautiful-input-group> for an icon inside one.
+ *
+ * A field is a well, where a Button is raised: the light from the upper right falls short of its
+ * top inner edge, which takes a soft shade, and on glass it catches the lower lip as a hairline.
+ * The look is the --field-* tokens, which Select reads too. A <textarea> shares this whole
+ * rule, and textarea.css, loaded after it, makes it grow line by line in place of the set height.
+ *
+ * Every rule sits in :where(), so its specificity is 0, as in button.css. The types listed are the
+ * ones that take text. A checkbox, radio, range, file or color input has a spec of its own.
+ */
+:where(
+    textarea,
+    input:not([type]),
+    input:is(
+        [type="text"],
+        [type="email"],
+        [type="password"],
+        [type="search"],
+        [type="tel"],
+        [type="url"],
+        [type="number"],
+        [type="date"],
+        [type="datetime-local"],
+        [type="month"],
+        [type="time"],
+        [type="week"]
+      )
+  ) {
+  display: block;
+  inline-size: 100%;
+  min-inline-size: 0;
+  /* A set height, not a minimum: one line never grows, and a date's picker button would add 2px. */
+  block-size: var(--control-height);
+  /* The border is part of the height, so the padding gives up 1px on each side. */
+  padding: calc(var(--space-2) - 1px) calc(var(--control-pad-x) - 1px);
+  border: 1px solid var(--field-edge);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  background-color: var(--field-fill);
+  backdrop-filter: blur(var(--control-blur)) saturate(var(--control-saturate));
+  box-shadow: var(--field-shadow);
+  font-size: var(--control-font-size);
+  line-height: var(--leading-sm);
+  caret-color: var(--color-accent);
+  /* Drops Safari's inner shadow and rounded search box, so every browser draws the same box. */
+  appearance: none;
+  transition:
+    border-color var(--motion-quick) var(--ease-out),
+    background-color var(--motion-quick) var(--ease-out);
+
+  &:focus-visible {
+    outline-offset: var(--field-focus-offset);
+  }
+
+  /* Firefox fades the placeholder with opacity, which would take it under 4.5:1. */
+  &::placeholder {
+    color: var(--color-text-muted);
+    opacity: 1;
+  }
+
+  @media (hover: hover) {
+    &:where(:hover:read-write) {
+      border-color: var(--field-edge-hover);
+    }
+  }
+
+  /* After hover, so an invalid field keeps its danger edge under the pointer. */
+  &:where([aria-invalid="true"]) {
+    border-color: var(--color-danger);
+  }
+
+  &:where(:disabled) {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  /*
+   * A value the browser filled in. Chromium paints its own blue under !important, so an inset
+   * shadow covers it with a faint accent tint, opaque on glass too.
+   */
+  &:where(:autofill) {
+    box-shadow:
+      inset 0 0 0 100vmax var(--field-autofill),
+      var(--field-shadow);
+    -webkit-text-fill-color: var(--color-text);
+  }
+}
+
+/* Safari on iOS centers a date's value. The set height keeps an empty one from collapsing. */
+:where(input)::-webkit-date-and-time-value {
+  text-align: start;
+}
+
+/*
+ * The search box's clear button: the kit's own ×, in muted ink. The × is icon-sized, but the
+ * button is a square the field's full height, out to its edge, so it is easy to hit with a
+ * finger or a quick pointer. Negative margins grow it past the padding without moving the text.
+ */
+:where(input[type="search"])::-webkit-search-decoration {
+  appearance: none;
+}
+
+:where(input[type="search"])::-webkit-search-cancel-button {
+  --clear-size: calc(var(--control-height) - 2px);
+
+  appearance: none;
+  flex: none;
+  inline-size: var(--clear-size);
+  block-size: var(--clear-size);
+  margin-block: calc((var(--leading-sm) - var(--clear-size)) / 2);
+  margin-inline: var(--space-1) calc(1px - var(--control-pad-x));
+  background-color: var(--color-text-muted);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='m6 6 8 8M14 6l-8 8'/%3E%3C/svg%3E")
+    center / var(--control-icon) no-repeat;
+  cursor: pointer;
+}
+
+/*
+ * An icon inside the field: an <svg> before the input, after it, or both. The input makes room
+ * for it, and the icon sits over the input, inset by the side padding. It is decorative, so it
+ * takes no clicks: a click on it lands on the field.
+ */
+beautiful-input-group {
+  position: relative;
+  display: block;
+
+  > :where(svg) {
+    position: absolute;
+    inset-block: 0;
+    /* Above the input, whose backdrop-filter paints it like a positioned element. */
+    z-index: 1;
+    inline-size: var(--control-icon);
+    block-size: var(--control-icon);
+    margin-block: auto;
+    color: var(--color-text-muted);
+    pointer-events: none;
+  }
+
+  > :where(svg:first-child) {
+    inset-inline-start: var(--control-pad-x);
+  }
+
+  > :where(svg:last-child) {
+    inset-inline-end: var(--control-pad-x);
+  }
+
+  &:has(> svg:first-child) > :where(input) {
+    padding-inline-start: calc(var(--control-pad-x) * 2 + var(--control-icon) - 1px);
+  }
+
+  &:has(> svg:last-child) > :where(input) {
+    padding-inline-end: calc(var(--control-pad-x) * 2 + var(--control-icon) - 1px);
+  }
+
+  /*
+   * A button at the end, such as DatePicker's calendar: a tertiary icon Button, square, filling
+   * the field inside its edge. Its icon sits where an end icon would, and its ring is inset so it
+   * stays inside the field.
+   */
+  > :where(button:last-child) {
+    --button-ink: var(--color-text-muted);
+
+    position: absolute;
+    inset-block: 1px;
+    inset-inline-end: 1px;
+    z-index: 1;
+    inline-size: calc(var(--control-height) - 2px);
+    min-block-size: 0;
+    padding: 0;
+    border-radius: calc(var(--radius-md) - 1px);
+    outline-offset: -2px;
+  }
+
+  &:has(> button:last-child) > :where(input) {
+    padding-inline-end: calc(var(--control-height) + var(--space-1));
+  }
+
+  /* A disabled field fades its icons with it. Its button fades as a disabled Button. */
+  &:has(> input:disabled) > :where(svg) {
+    opacity: 0.5;
+  }
+}

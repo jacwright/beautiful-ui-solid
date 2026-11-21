@@ -1,0 +1,107 @@
+/*
+ * Auth layout: the page for signing in, joining a team, or a link that has expired. One card in
+ * the middle of the screen, and an optional footer under it.
+ *
+ *   <beautiful-auth-layout>   the whole screen. Its backdrop is --auth-backdrop, the theme's
+ *                             --layout-backdrop unless a page sets its own.
+ *     <main>                  the card, the page's main landmark. Logo, <h1>, text, actions.
+ *     <footer>                optional: small print under the card, such as Terms and Privacy.
+ *
+ * Where the layout is narrower than the card and its margins, as on a phone, the card drops its
+ * frame and the content sits on the page, so nothing is lost to bezels.
+ */
+beautiful-auth-layout {
+  --auth-width: 28rem;
+
+  display: grid;
+  /* The card takes the height; a footer is a second row, with its gap above it. No footer, no gap. */
+  grid-template-rows: 1fr;
+  grid-auto-rows: auto;
+  justify-items: center;
+  align-items: center;
+  gap: var(--space-6);
+  min-height: 100dvh;
+  padding: var(--space-8) var(--space-4) var(--space-6);
+  background: var(--auth-backdrop, var(--layout-backdrop));
+  container-type: inline-size;
+}
+
+beautiful-auth-layout > main {
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
+  width: min(100%, var(--auth-width));
+  /* With a bezel, the content sits inside the inner panel, the same distance from its edge. */
+  padding: calc(var(--surface-bezel) + var(--space-8));
+  border: 1px solid var(--surface-edge);
+  --rim-radius: var(--radius-xl);
+  border-radius: var(--rim-radius);
+  /* Muted text on the card takes the surface's stronger shade, as in a Dialog. */
+  --color-text-muted: var(--surface-text-muted);
+  background-color: var(--surface-fill);
+  background-image: var(--surface-sheen);
+  backdrop-filter: blur(var(--surface-blur)) saturate(var(--surface-saturate));
+  box-shadow: var(--shadow-card);
+}
+
+/* The rim (::before) and the inner panel (::after) are in surface.css, shared with Dialog. */
+
+/* The parts stack. A title sits close to the line under it, and the rest is spaced evenly. */
+beautiful-auth-layout > main > * + * {
+  margin-block-start: var(--space-6);
+}
+
+beautiful-auth-layout > main > :is(h1, h2) + p {
+  margin-block-start: var(--space-2);
+}
+
+/* A logo: an <img> or <svg> at the top of the card. */
+beautiful-auth-layout > main > :is(img, svg):first-child {
+  display: block;
+  height: var(--space-8);
+  width: auto;
+}
+
+/* The card's actions fill its width and stack, as do a form's submit button and its fields. */
+beautiful-auth-layout > main > :is(button, a[data-button]),
+beautiful-auth-layout > main > form > :is(button, a[data-button]) {
+  width: 100%;
+}
+
+beautiful-auth-layout > main > :is(button, a[data-button]) + :is(button, a[data-button]) {
+  margin-block-start: var(--space-3);
+}
+
+beautiful-auth-layout > main > form > :is(button, a[data-button]) {
+  margin-block-start: var(--space-6);
+}
+
+beautiful-auth-layout > footer {
+  max-width: var(--auth-width);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+  text-align: center;
+  text-wrap: balance;
+}
+
+/*
+ * Narrower than the card and its margins: no frame, so the content has the whole width. A
+ * container query can't read --auth-width, so 30rem is the 28rem card and its 1rem margins. An
+ * app with a wider card sets its own breakpoint.
+ */
+@container (width < 30rem) {
+  beautiful-auth-layout > main {
+    padding: 0;
+    border-color: transparent;
+    --color-text-muted: inherit;
+    background: none;
+    backdrop-filter: none;
+    box-shadow: none;
+  }
+
+  beautiful-auth-layout > main::before,
+  beautiful-auth-layout > main::after {
+    content: none;
+  }
+}

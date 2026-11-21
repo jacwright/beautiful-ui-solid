@@ -1,0 +1,59 @@
+/*
+ * Surfaces: Dialog's panel, Popover's and each Toast, which float over the page, and Card and
+ * Auth layout's card and the Stacked and Sidebar layouts' content, which sit in it. Each sets --rim-radius to its corner radius, and the
+ * theme's --surface-* tokens set the light.
+ *
+ * The rim: a hairline gradient over the outer edge of the border. The mask keeps only the
+ * pseudo-element's 1px padding ring. Chromium rounds borders and padding under 1px up to
+ * 1px, so for a thinner line the ring is drawn at 1 / --surface-rim-scale times the panel's
+ * size and scaled down to fit it.
+ */
+:where(dialog, [popover]:not(beautiful-toaster), beautiful-toaster > beautiful-toast, beautiful-card, [data-card], beautiful-auth-layout > main, beautiful-stacked-layout > main, beautiful-sidebar-layout > main, [data-glint])::before {
+  /* Classic sets this to none, so it draws no box at all and axe can judge the contrast. */
+  content: var(--surface-rim-content);
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: calc((100% + 2px) / var(--surface-rim-scale));
+  height: calc((100% + 2px) / var(--surface-rim-scale));
+  padding: 1px;
+  border-radius: calc(var(--rim-radius) / var(--surface-rim-scale));
+  background: var(--surface-hotspot), var(--surface-rim);
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  transform: scale(var(--surface-rim-scale));
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+/*
+ * The inner panel: a frosted slab inset by --surface-bezel inside a band of clear glass. It's
+ * a tint only, because the panel is a backdrop root. With no bezel it covers the whole panel
+ * in transparent and draws nothing. Dialog and Auth layout's card have one.
+ */
+:where(dialog, beautiful-auth-layout > main)::after {
+  content: "";
+  position: absolute;
+  /* Measured from the outer edge, past the 1px border. */
+  inset: calc(var(--surface-bezel) - 1px);
+  z-index: -1;
+  /* Half the bezel smaller than the outer radius: a thick pane's inner curve looks right there. */
+  border-radius: max(0px, var(--rim-radius) - var(--surface-bezel) / 2);
+  /* Two properties, not a layered shorthand: classic's computed image is a single none, so axe can see through it. */
+  background-color: var(--surface-inset-fill);
+  background-image: var(--surface-inset-sheen);
+  box-shadow: var(--surface-inset-edge);
+  pointer-events: none;
+}
+
+/*
+ * data-glint: any element opts into the rim, the lit top-right edge, whatever its shadow. It
+ * needs to be a box with a border-radius, so --rim-radius says which, as a pane sets it. Only
+ * the glass theme draws it (classic's --surface-rim-content is none), and only on a surface
+ * the glass can catch light on: a pane, not a well.
+ */
+:where([data-glint]) {
+  --rim-radius: var(--radius-lg);
+  position: relative;
+}

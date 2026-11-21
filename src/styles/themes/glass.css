@@ -1,0 +1,373 @@
+/*
+ * Glass applies where the root says data-theme="glass". (Modern is the default: themes/modern.css.)
+ * It falls back to classic's surfaces where backdrop-filter is missing, and where the user
+ * asks for reduced transparency: revert-layer drops back to the theme.classic layer.
+ * Browsers that don't expose that preference get glass.
+ *
+ * Light comes from the upper right, at about 40°. A hairline rim is brightest along the top and
+ * fades down the sides. A hotspot on the rim, toward the right of the top edge, is brighter
+ * still, and a faint sheen on the fill glows from the same corner. Nothing moves.
+ *
+ * Both modes draw the same rim and hotspot, at dark mode's strengths. On a light page a white
+ * glint is lost against the glass, so light mode adds a --glass-halo around every pane that casts a
+ * shadow: a dark shadow with no offset, which the glint stands out from. The inner panel of a bezel is whitest
+ * in the top-right corner and dims a little toward the bottom-left, the backdrop dims the page
+ * least there, and every shadow falls down and to the left, away from the light.
+ */
+@supports (backdrop-filter: blur(1px)) {
+  :root[data-theme="glass"] {
+    --glass-hot: light-dark(rgb(255 255 255 / 1), rgb(255 255 255 / 0.9));
+    --glass-light: light-dark(rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.35));
+    --glass-glow: light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.07));
+    /*
+     * The rim and hotspot, the same in both modes: dark mode's strengths. In light mode they are
+     * what makes the glint, and --glass-halo is what lets it show.
+     */
+    --glass-rim-light: rgb(255 255 255 / 0.35);
+    --glass-rim-faint: rgb(255 255 255 / 0.03);
+    --glass-rim-hot: rgb(255 255 255 / 0.9);
+    /*
+     * The halo (--shadow-halo in tokens.css): a shadow with no offset all the way round a pane, so a
+     * light glint has something dark to stand out from. Light mode only: dark panes already sit on a
+     * dark page.
+     */
+    --glass-halo: light-dark(rgb(0 0 0 / 0.1), transparent);
+    /* Shadows fall away from the light, this far left for each unit they fall down (tokens.css). */
+    --shadow-cast: -0.5;
+    --shadow-halo: var(--glass-halo);
+
+    /*
+     * A bezel: a band of very clear glass around a frosted inner panel that holds the content.
+     * The inner panel is dense enough for text on its own, so the contrast doesn't depend on
+     * what's behind.
+     */
+    --surface-fill: light-dark(rgb(255 255 255 / 0.1), rgb(30 30 36 / 0.1));
+    --surface-bezel: var(--space-3);
+    --surface-inset-fill: light-dark(rgb(255 255 255 / 0.85), rgb(30 30 36 / 0.85));
+    /*
+     * Light mode: whiter in the top-right corner, a little dimmer toward the bottom-left. One layer,
+     * because Dialog clips it to the panel's padding box, inside the rim.
+     */
+    --surface-inset-sheen: radial-gradient(
+      120% 140% at 100% 0%,
+      light-dark(rgb(255 255 255 / 0.8), transparent),
+      light-dark(rgb(255 255 255 / 0), transparent) 60%,
+      light-dark(rgb(0 0 0 / 0.06), transparent) 100%
+    );
+    --surface-inset-edge:
+      inset 0 1px 0 light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.14)),
+      0 0 0 1px light-dark(rgb(0 0 0 / 0.14), rgb(255 255 255 / 0.16));
+    --surface-text-muted: light-dark(#3f3f46, #e4e4e7);
+    /* Darker than classic's: a lit item's tint over a bright stage measures as dark as #c6cae0 (4.9:1). */
+    --color-text-subtle: light-dark(#505058, #a1a1aa);
+    --surface-blur: 5px;
+    --surface-saturate: 180%;
+    --surface-edge: light-dark(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.06));
+    /*
+     * The glow, the glint and the control's light below keep to the corner: each is a size capped
+     * in rem, so a wide bar doesn't stretch them across its width, and sits a capped distance from
+     * the right edge. A small pane keeps the proportions it had. A fixed height too, so a tall panel
+     * doesn't stretch the glow down behind its text.
+     */
+    --surface-sheen: radial-gradient(min(100%, 24rem) 11rem at calc(100% - min(15%, 4.5rem)) 0, var(--glass-glow), transparent 60%);
+    --surface-rim: linear-gradient(to bottom, var(--glass-rim-light), var(--glass-rim-faint) 35%, transparent 80%);
+    --surface-hotspot: radial-gradient(min(35%, 10rem) min(45%, 4rem) at calc(100% - min(25%, 8rem)) 0, var(--glass-rim-hot), transparent);
+    --surface-rim-content: "";
+    /* Light mode dims the page least in the top-right corner, where the light comes from. */
+    --backdrop-fill: radial-gradient(
+      farthest-corner at 100% 0%,
+      light-dark(rgb(24 24 27 / 0.1), rgb(0 0 0 / 0.3)),
+      light-dark(rgb(24 24 27 / 0.32), rgb(0 0 0 / 0.3))
+    );
+
+    /*
+     * Glass needs something behind it to bend, so a layout's page (Auth, Stacked, Sidebar) glows with soft color from
+     * three corners, under its panes' light. Pale enough for text straight on it, as on a phone.
+     */
+    --layout-backdrop:
+      radial-gradient(48rem 36rem at 0% 0%, light-dark(#cfe0fd, #1e3a5f), transparent),
+      radial-gradient(44rem 36rem at 100% 10%, light-dark(#fbd9ec, #3b1d36), transparent),
+      radial-gradient(40rem 30rem at 70% 100%, light-dark(#e2dcfe, #2e1f4f), transparent),
+      var(--color-canvas);
+
+    /*
+     * A popup is one pane of frosted glass, denser than the bezel and blurred more, so its text
+     * holds 4.5:1 over whatever it opens on. It catches the light the panel does: sheen, rim, hotspot.
+     */
+    --popup-fill: light-dark(rgb(255 255 255 / 0.72), rgb(30 30 36 / 0.72));
+    --popup-blur: 16px;
+
+    /*
+     * A card is a pane as frosted as a popup's, and a shade lighter: whiter in light mode, a
+     * smoky gray in dark. Its text holds 4.5:1 over whatever is behind it. It catches the light
+     * as a Button does, not as a dialog: the glow from the upper right fills the pane, and the
+     * rim glints at the top right, so a card reads as the same glass as the controls on it.
+     * It sits in the page, so its shadow is closer than a popup's.
+     */
+    --card-fill: light-dark(rgb(255 255 255 / 0.78), rgb(44 44 52 / 0.7));
+    --card-sheen: var(--control-sheen);
+    --card-rim: var(--control-rim);
+    --card-hotspot: var(--control-hotspot);
+    --card-backdrop: blur(var(--popup-blur)) saturate(var(--surface-saturate));
+    --card-edge: var(--surface-edge);
+    --card-edge-hover: light-dark(rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.18));
+
+    /*
+     * A table's pane is a popup's frosted glass, as dense, so its rows keep 4.5:1 over whatever the
+     * page shows through. It lies in the page rather than floating, so it casts no shadow.
+     */
+    --table-fill: var(--popup-fill);
+    --table-blur: var(--popup-blur);
+    --table-edge: var(--surface-edge);
+
+    /*
+     * Controls catch the same light, smaller: a sheen from the upper right, the rim and a hotspot.
+     * An outline button is a pane of frosted glass.
+     */
+    /*
+     * Dense enough that colored text keeps 4.5:1 over the bright stage: white in light mode,
+     * near-black in dark. tests/glass.spec.ts in the docs measures it from pixels.
+     */
+    --control-fill: light-dark(rgb(255 255 255 / 0.7), rgb(24 24 28 / 0.75));
+    --control-edge: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.1));
+    /*
+     * A secondary Button's pane takes a card's edge in light mode (--surface-edge): clear glass, so
+     * the pane ends where its fill meets the shadow, crisply. A gray edge there blurred into the halo.
+     */
+    --control-pane-edge: light-dark(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.1));
+    --control-blur: 12px;
+    --control-saturate: 180%;
+    /*
+     * The sheen and the hotspot are sized in rem, what they were on a default button, so a wide
+     * control keeps its glint in the top-right corner instead of stretching it across the top.
+     * Their center is 75% or 85% across a narrow control, and a fixed distance from the right edge
+     * on a wide one. (A gradient's size can't take a percentage inside min(), so it is fixed.)
+     */
+    --control-sheen: radial-gradient(
+      8rem 2.25rem at max(85%, calc(100% - 1rem)) 0%,
+      light-dark(rgb(255 255 255 / 0.22), rgb(255 255 255 / 0.12)),
+      transparent 70%
+    );
+    --control-rim: linear-gradient(to bottom, var(--glass-rim-light), var(--glass-rim-faint) 50%, transparent);
+    --control-hotspot: radial-gradient(2.75rem 1.8rem at max(75%, calc(100% - 1.75rem)) 0%, var(--glass-rim-hot), transparent);
+    /* The hotspot for a control too small for the rem size, such as an avatar: a share of its own box. */
+    --control-hotspot-small: radial-gradient(40% 80% at 75% 0%, var(--glass-rim-hot), transparent);
+    --control-rim-content: "";
+    /*
+     * Text in a color sits on glass that lets the page through, so it is a step further from the
+     * glass than classic's: deeper in light mode, paler in dark.
+     */
+    --color-accent: light-dark(#1d4ed8, #93c5fd);
+    --color-danger: light-dark(#ba022f, #ff9a9b);
+    --color-success: light-dark(#166534, #86efac);
+    --color-warning: light-dark(#92400e, #fcd34d);
+    /*
+     * A primary Button is tinted glass: full-strength colors at 85%, so it is lighter on a light
+     * page and darker on a dark one, like the secondary pane beside it. Accent is Tailwind's 700 in
+     * both modes and danger is the 700 in light mode, because 85% of the 600s leaves white text
+     * under 4.5:1 over a white page or the bright stage.
+     */
+    --color-accent-fill: #1d4ed8;
+    --color-danger-fill: light-dark(#b91c1c, #dc2626);
+    /* A Meter's warning, at the same 85%: amber 700 in light mode, as 85% of the 600 is under 3:1 over a white page. */
+    --color-warning-fill: light-dark(#b45309, #f59e0b);
+    --control-primary-opacity: 85%;
+
+    /* A callout is a pane of tinted glass, frosted as densely as a secondary Button, and lifted off the page as one is. */
+    --callout-tint-light: 4%;
+    --callout-tint-dark: 10%;
+    --callout-shadow: var(--control-shadow);
+
+    /*
+     * A field is a well in the glass: frosted like a secondary Button and as dense, so its text
+     * keeps 4.5:1 over the bright stage, with no sheen or rim. A shade falls inside its top edge,
+     * and its lower lip catches the light as a hairline.
+     */
+    --field-fill: light-dark(rgb(255 255 255 / 0.62), rgb(16 16 20 / 0.72));
+    --field-edge: light-dark(rgb(0 0 0 / 0.12), rgb(255 255 255 / 0.1));
+    --field-edge-hover: light-dark(rgb(0 0 0 / 0.26), rgb(255 255 255 / 0.24));
+    --field-shadow:
+      inset calc(1px * var(--shadow-cast, 0)) 1px 3px light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.45)),
+      0 1px 0 light-dark(rgb(255 255 255 / 0.75), rgb(255 255 255 / 0.08));
+    /*
+     * Toggle group's groove holds text, where Switch's track holds none, so it is frosted as densely
+     * as a field to keep its segments' text at 4.5:1 over bright content: a shade darker than the
+     * raised pane in light mode, a shade lighter than the page in dark.
+     */
+    --toggle-groove: light-dark(rgb(236 236 240 / 0.8), rgb(40 40 46 / 0.72));
+
+    /*
+     * A pressed Toggle button is the field's well, but in light mode its glint sits on the lower
+     * lip itself, inside the edge, and softer: below the edge it reads as a stray line. Dark mode
+     * keeps the field's.
+     */
+    --toggle-shadow:
+      inset calc(1px * var(--shadow-cast, 0)) 1px 3px light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.45)),
+      inset 0 -1px 0 light-dark(rgb(255 255 255 / 0.45), transparent),
+      0 1px 0 light-dark(transparent, rgb(255 255 255 / 0.08));
+
+    /*
+     * A Divider is a groove cut in the glass: its far edge catches the light as a second hairline,
+     * as a field's lower lip does. In dark mode the groove is a shadow, darker than the glass, where
+     * a tint of the light text would read as a ridge.
+     */
+    --color-hairline: light-dark(color-mix(in oklab, currentColor 10%, transparent), rgb(0 0 0 / 0.5));
+    --color-hairline-soft: light-dark(color-mix(in oklab, currentColor 5%, transparent), rgb(0 0 0 / 0.3));
+    --hairline-lit: light-dark(rgb(255 255 255 / 0.7), rgb(255 255 255 / 0.08));
+
+    /*
+     * A track is a groove in the glass: a tint of what's behind, with the field's shade inside its
+     * top edge and a lit lower lip. Its value is the primary Button's tinted glass. The thumb is a
+     * secondary Button in small: a pane of frosted glass in the mode's tint, lit from the upper
+     * right, with a bright top edge, softer in dark mode, where a bright one glares. It is thinner than a Button's pane, so the groove and its fill
+     * show through it, blurred.
+     */
+    --track-fill: light-dark(rgb(0 0 0 / 0.1), rgb(255 255 255 / 0.14));
+    --track-shadow:
+      inset calc(1px * var(--shadow-cast, 0)) 1px 1px light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.4)),
+      0 1px 0 light-dark(rgb(255 255 255 / 0.7), rgb(255 255 255 / 0.06));
+    --track-value: color-mix(in srgb, var(--color-accent-fill) var(--control-primary-opacity), transparent);
+    /* The fill lightens toward its lower edge, as light caught inside the groove. */
+    --track-value-image: linear-gradient(
+      to bottom,
+      var(--track-value),
+      color-mix(in oklab, var(--track-value), #fff 22%)
+    );
+    --thumb-fill: light-dark(rgb(255 255 255 / 0.5), rgb(24 24 28 / 0.55));
+    --thumb-blur: 4px;
+    --thumb-sheen:
+      radial-gradient(55% 40% at 70% 0%, light-dark(var(--glass-hot), rgb(255 255 255 / 0.2)), transparent),
+      var(--control-sheen);
+    --thumb-edge:
+      inset 0 1px 0 var(--glass-light),
+      inset 0 -1px 0 light-dark(rgb(0 0 0 / 0.06), rgb(255 255 255 / 0.04)),
+      0 0 0 1px light-dark(rgb(0 0 0 / 0.12), rgb(255 255 255 / 0.16));
+
+    /* A badge catches the light along its top edge, as a control's rim does, with no blur of its own. */
+    --badge-highlight: inset 0 1px 0 light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.1));
+
+    /*
+     * A skeleton's light is a brighter glint, slanted toward the light in the upper right, as a
+     * reflection crossing a pane of glass.
+     */
+    --skeleton-shine: light-dark(rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.12));
+    --skeleton-shine-angle: 115deg;
+
+    /* A checkbox's or radio's edge, see-through like the glass but still 3:1 over the page. */
+    --control-choice-edge: light-dark(rgb(0 0 0 / 0.5), rgb(255 255 255 / 0.4));
+    --control-choice-edge-hover: light-dark(rgb(0 0 0 / 0.7), rgb(255 255 255 / 0.6));
+    /*
+     * Progress's fill lightens toward its lower edge, as a Range's value does (--track-value-image),
+     * drawn as a light over --progress-color so an error's danger fill gets it too. Its
+     * indeterminate sweep is lit the other way, from the top, and the light fades out toward the
+     * sweep's ends with it.
+     */
+    --progress-sheen: linear-gradient(to bottom, transparent, rgb(255 255 255 / 0.22));
+    --progress-sweep-sheen: radial-gradient(50% 100% at 50% 0%, rgb(255 255 255 / 0.3), transparent);
+  }
+}
+
+/*
+ * In light mode a hairline of white is lost against the glass, so a button's rim is as thick as its
+ * border: 1px. A primary's edge color is then painted in the rim, under its light, and its border
+ * and fill stop short of it: drawn as two shapes on one curve, the colored border's smoothed outer
+ * pixels showed past the white glint as a fringe. Dark mode's hairline can't stand in for a border. Dark mode keeps the hairline. data-mode picks the mode when the root says; with no
+ * data-mode, the user's preference does.
+ */
+@supports (backdrop-filter: blur(1px)) {
+  :root[data-mode="light"][data-theme="glass"] {
+    --control-rim-scale: 1;
+    --control-primary-border-opacity: 0%;
+    --control-primary-clip: padding-box;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root[data-theme="glass"]:not([data-mode]) {
+      --control-rim-scale: 1;
+      --control-primary-border-opacity: 0%;
+      --control-primary-clip: padding-box;
+    }
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-theme="glass"] {
+    --surface-fill: revert-layer;
+    --surface-blur: revert-layer;
+    --surface-saturate: revert-layer;
+    --surface-edge: revert-layer;
+    --surface-text-muted: revert-layer;
+    --color-text-subtle: revert-layer;
+    --surface-sheen: revert-layer;
+    --surface-bezel: revert-layer;
+    --surface-inset-fill: revert-layer;
+    --surface-inset-sheen: revert-layer;
+    --surface-inset-edge: revert-layer;
+    --surface-rim: revert-layer;
+    --surface-hotspot: revert-layer;
+    --surface-rim-content: revert-layer;
+    --backdrop-fill: revert-layer;
+    --layout-backdrop: revert-layer;
+    --popup-fill: revert-layer;
+    --popup-blur: revert-layer;
+    --card-fill: revert-layer;
+    --card-sheen: revert-layer;
+    --card-rim: revert-layer;
+    --card-hotspot: revert-layer;
+    --card-backdrop: revert-layer;
+    --card-edge: revert-layer;
+    --card-edge-hover: revert-layer;
+    --shadow-cast: revert-layer;
+    --shadow-halo: revert-layer;
+    --table-fill: revert-layer;
+    --table-blur: revert-layer;
+    --table-edge: revert-layer;
+    --control-fill: revert-layer;
+    --control-edge: revert-layer;
+    --control-pane-edge: revert-layer;
+    --control-primary-border-opacity: revert-layer;
+    --control-primary-clip: revert-layer;
+    --control-blur: revert-layer;
+    --control-saturate: revert-layer;
+    --control-sheen: revert-layer;
+    --control-rim: revert-layer;
+    --control-hotspot: revert-layer;
+    --control-hotspot-small: revert-layer;
+    --control-rim-content: revert-layer;
+    --color-accent: revert-layer;
+    --color-danger: revert-layer;
+    --color-success: revert-layer;
+    --color-warning: revert-layer;
+    --color-accent-fill: revert-layer;
+    --color-danger-fill: revert-layer;
+    --color-warning-fill: revert-layer;
+    --control-primary-opacity: revert-layer;
+    --field-fill: revert-layer;
+    --field-edge: revert-layer;
+    --field-edge-hover: revert-layer;
+    --field-shadow: revert-layer;
+    --toggle-shadow: revert-layer;
+    --toggle-groove: revert-layer;
+    --color-hairline: revert-layer;
+    --color-hairline-soft: revert-layer;
+    --hairline-lit: revert-layer;
+    --track-fill: revert-layer;
+    --track-shadow: revert-layer;
+    --track-value: revert-layer;
+    --track-value-image: revert-layer;
+    --thumb-fill: revert-layer;
+    --thumb-blur: revert-layer;
+    --thumb-sheen: revert-layer;
+    --thumb-edge: revert-layer;
+    --callout-tint-light: revert-layer;
+    --callout-tint-dark: revert-layer;
+    --callout-shadow: revert-layer;
+    --badge-highlight: revert-layer;
+    --skeleton-shine: revert-layer;
+    --skeleton-shine-angle: revert-layer;
+    --control-choice-edge: revert-layer;
+    --control-choice-edge-hover: revert-layer;
+    --progress-sheen: revert-layer;
+    --progress-sweep-sheen: revert-layer;
+  }
+}

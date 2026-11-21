@@ -1,0 +1,191 @@
+/*
+ * Popover, on native popover="auto": a panel of content that opens beside the button that
+ * toggles it. The browser puts it in the top layer, closes it on Escape and on a click outside,
+ * returns focus to the button, and sets the button's aria-expanded. A button with
+ * commandfor="<id>" command="toggle-popover" is the panel's implicit anchor, so CSS anchor
+ * positioning places it with no anchor-name.
+ *
+ *   data-anchor: where the panel sits against its button. "bottom start" (the default),
+ *                "bottom", "bottom end", "top start", "top", "top end", "left start", "left",
+ *                "left end", "right start", "right", "right end". Start lines the panel up
+ *                with the button's left edge above or below it, and its top edge beside it.
+ *
+ * Every selector sits in :where(), so its specificity is 0. A popup built on popover, such as
+ * Dropdown or Tooltip, restyles it with any selector of its own. The rim is in surface.css.
+ */
+:where([popover]) {
+  --popover-width: 20rem;
+  /* The space between the panel and its button. */
+  --popover-gap: var(--space-2);
+  /* Where the panel enters from and leaves to: a little smaller. It grows from the side its anchor names. */
+  --popover-from: scale(var(--popup-scale));
+  --rim-radius: var(--radius-lg);
+  /* Muted text inside takes the surface's stronger shade, as in Dialog. */
+  --color-text-muted: var(--surface-text-muted);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: max-content;
+  max-width: min(var(--popover-width), 100vw - 2 * var(--space-4));
+  padding: var(--space-4);
+  /* Not clipped, so the rim can paint over the border. */
+  overflow: visible;
+  border: 1px solid var(--surface-edge);
+  border-radius: var(--rim-radius);
+  color: var(--color-text);
+  background-color: var(--popup-fill);
+  background-image: var(--surface-sheen);
+  backdrop-filter: blur(var(--popup-blur)) saturate(var(--surface-saturate));
+  box-shadow: var(--shadow-popup);
+  font-size: var(--text-sm);
+
+  /* The closed state. Closing transitions to it, faster than opening and easing in. */
+  opacity: 0;
+  transform: var(--popover-from);
+  transition:
+    opacity var(--motion-popup-exit) var(--ease-in),
+    transform var(--motion-popup-exit) var(--ease-in),
+    display var(--motion-popup-exit) allow-discrete,
+    overlay var(--motion-popup-exit) allow-discrete;
+}
+
+/* The panel keeps its flex layout while it animates out, then hides. */
+:where([popover]:not(:popover-open)) {
+  display: none;
+}
+
+:where([popover]:popover-open) {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--motion-popup-enter) var(--ease-out),
+    transform var(--motion-popup-enter) var(--ease-out),
+    display var(--motion-popup-enter) allow-discrete,
+    overlay var(--motion-popup-enter) allow-discrete;
+
+  @starting-style {
+    opacity: 0;
+    transform: var(--popover-from);
+  }
+}
+
+/* Actions, at the end of the panel. */
+:where([popover]) > :where(footer) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-block-start: var(--space-2);
+}
+
+/*
+ * Placement. Where it doesn't fit, the panel flips to the other side of its button, then to the
+ * other end. Where no end fits, as on a phone, it centers below or above the button, slid along to
+ * stay 1rem inside the screen. Without anchor positioning it stays where the browser puts a
+ * popover: the middle of the screen. A popover needs its button as its anchor: opened from
+ * showPopover() with no source, it has none and sits where it is in the page.
+ */
+@position-try --popover-below {
+  position-area: bottom;
+  margin: var(--popover-gap) var(--space-4) 0;
+}
+
+@position-try --popover-above {
+  position-area: top;
+  margin: 0 var(--space-4) var(--popover-gap);
+}
+
+@supports (position-area: bottom) {
+  :where([popover]) {
+    inset: auto;
+    margin: var(--popover-gap) 0 0;
+    position-area: bottom span-right;
+    position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline, --popover-below, --popover-above;
+    transform-origin: top left;
+  }
+
+  /* Centered panels keep 1rem from the screen's edge as they slide to fit. */
+  :where([popover][data-anchor="bottom"]) {
+    margin: var(--popover-gap) var(--space-4) 0;
+    position-area: bottom;
+    transform-origin: top;
+  }
+
+  :where([popover][data-anchor="bottom end"]) {
+    position-area: bottom span-left;
+    transform-origin: top right;
+  }
+
+  :where([popover]):where([data-anchor="top start"], [data-anchor="top"], [data-anchor="top end"]) {
+    margin: 0 0 var(--popover-gap);
+  }
+
+  :where([popover][data-anchor="top start"]) {
+    position-area: top span-right;
+    transform-origin: bottom left;
+  }
+
+  :where([popover][data-anchor="top"]) {
+    margin: 0 var(--space-4) var(--popover-gap);
+    position-area: top;
+    transform-origin: bottom;
+  }
+
+  :where([popover][data-anchor="top end"]) {
+    position-area: top span-left;
+    transform-origin: bottom right;
+  }
+
+  /* Beside the button, flipping to its other side comes first. */
+  :where([popover]):where([data-anchor^="left"], [data-anchor^="right"]) {
+    position-try-fallbacks: flip-inline, flip-block, flip-block flip-inline, --popover-below, --popover-above;
+  }
+
+  :where([popover]):where([data-anchor^="left"]) {
+    margin: 0 var(--popover-gap) 0 0;
+  }
+
+  :where([popover][data-anchor="left start"]) {
+    position-area: left span-bottom;
+    transform-origin: top right;
+  }
+
+  :where([popover][data-anchor="left"]) {
+    margin: var(--space-4) var(--popover-gap) var(--space-4) 0;
+    position-area: left;
+    transform-origin: right;
+  }
+
+  :where([popover][data-anchor="left end"]) {
+    position-area: left span-top;
+    transform-origin: bottom right;
+  }
+
+  :where([popover]):where([data-anchor^="right"]) {
+    margin: 0 0 0 var(--popover-gap);
+  }
+
+  :where([popover][data-anchor="right start"]) {
+    position-area: right span-bottom;
+    transform-origin: top left;
+  }
+
+  :where([popover][data-anchor="right"]) {
+    margin: var(--space-4) 0 var(--space-4) var(--popover-gap);
+    position-area: right;
+    transform-origin: left;
+  }
+
+  :where([popover][data-anchor="right end"]) {
+    position-area: right span-top;
+    transform-origin: bottom left;
+  }
+}
+
+/* Reduced motion: a plain fade with no movement. */
+@media (prefers-reduced-motion: reduce) {
+  :where([popover]) {
+    --popover-from: none;
+  }
+}

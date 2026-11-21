@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Plain markup harness</title>
+  </head>
+  <body>
+    <!--
+      Plain markup a static website writes, wired with no Solid: wireTabs and wireToggleGroup, which
+      only plain markup uses (the Solid Tabs and ToggleGroup do their own). For tests/static.spec.ts.
+    -->
+    <main id="app">
+      <beautiful-tabs>
+        <beautiful-tab-list role="tablist" aria-label="Site settings">
+          <button type="button" role="tab" id="settings-tab-0" aria-selected="true" aria-controls="settings-panel-0">General</button>
+          <button type="button" role="tab" id="settings-tab-1" aria-selected="false" aria-controls="settings-panel-1" tabindex="-1">Domains</button>
+          <button type="button" role="tab" id="settings-tab-2" aria-selected="false" aria-controls="settings-panel-2" tabindex="-1">Forms</button>
+          <button type="button" role="tab" id="settings-tab-3" aria-selected="false" aria-controls="settings-panel-3" tabindex="-1">Billing</button>
+        </beautiful-tab-list>
+        <beautiful-tab-panel role="tabpanel" id="settings-panel-0" aria-labelledby="settings-tab-0" tabindex="0">
+          <p>Spring launch is live at spring-launch.example.com. Its name and summary show on your dashboard and in search results.</p>
+        </beautiful-tab-panel>
+        <beautiful-tab-panel role="tabpanel" id="settings-panel-1" aria-labelledby="settings-tab-1" tabindex="0" hidden>
+          <p>springlaunch.com points here, and its certificate renews on its own. Add another domain to send its visitors here too.</p>
+        </beautiful-tab-panel>
+        <beautiful-tab-panel role="tabpanel" id="settings-panel-2" aria-labelledby="settings-tab-2" tabindex="0" hidden>
+          <p>Two forms take submissions: Contact and Waitlist. 38 came in this week.</p>
+        </beautiful-tab-panel>
+        <beautiful-tab-panel role="tabpanel" id="settings-panel-3" aria-labelledby="settings-tab-3" tabindex="0" hidden>
+          <p>$29 a month, paid by card ending 4242. The next payment is on December 1.</p>
+        </beautiful-tab-panel>
+      </beautiful-tabs>
+      <beautiful-toggle-group role="radiogroup" aria-label="Period">
+        <button type="button" role="radio" aria-checked="false" value="day" tabindex="-1">Day</button>
+        <button type="button" role="radio" aria-checked="true" value="week" tabindex="0">Week</button>
+        <button type="button" role="radio" aria-checked="false" value="month" tabindex="-1">Month</button>
+        <button type="button" role="radio" aria-checked="false" value="year" tabindex="-1">Year</button>
+      </beautiful-toggle-group>
+    </main>
+    <script type="module" src="./static.ts"></script>
+  </body>
+</html>

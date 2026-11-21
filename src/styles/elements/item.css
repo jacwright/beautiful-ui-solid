@@ -1,0 +1,46 @@
+/*
+ * An item in a popup list: Dropdown's menu items, and Listbox's options (and Combobox's, which
+ * reuse them). One row: an optional leading <svg>, the label, and a <small> description under it.
+ * Each list sets the row's columns, how an item is lit, and what else it shows.
+ *
+ * The lit item, the one the keyboard or pointer is on, takes --item-tint: a quiet tint of the text
+ * color, which keeps its text and icon as they are. The tint is chosen over a primary Button's
+ * accent fill, on Dropdown. Every selector sits in :where(), so its specificity is 0, and this file
+ * comes after button.css, which a menu item restyles.
+ */
+:where([role="menu"] [role^="menuitem"], [role="listbox"] [role="option"]) {
+  --item-tint: color-mix(in oklab, var(--color-text) 9%, transparent);
+  /*
+   * A description: subtle in light mode, quieter than the label's muted icon.
+   * Dark mode keeps the muted shade, which a popup's surface already lifts for its glass.
+   */
+  --item-description: light-dark(var(--color-text-subtle), var(--color-text-muted));
+
+  display: grid;
+  align-items: center;
+  min-height: var(--item-height);
+  padding: var(--space-1) var(--control-pad-x);
+  /* Concentric with the list's corners: its radius less its padding. */
+  border-radius: calc(var(--radius-lg) - var(--space-1));
+  color: var(--color-text);
+  font-size: inherit;
+  font-weight: 400;
+  line-height: var(--leading-sm);
+  text-align: start;
+  cursor: default;
+
+  > :where(svg) {
+    grid-row: 1;
+    width: var(--control-icon);
+    height: var(--control-icon);
+    color: var(--color-text-muted);
+  }
+
+  /* A description, under the label. */
+  > :where(small) {
+    grid-row: 2;
+    color: var(--item-description);
+    font-size: var(--text-xs);
+    line-height: var(--leading-sm);
+  }
+}

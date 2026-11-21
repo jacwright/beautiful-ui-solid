@@ -1,0 +1,228 @@
+/*
+ * Range: a native <input type="range">, drawn with appearance: none as a track and a thumb.
+ *
+ * The track is a narrow well, like a field, filled in the accent from the start up to the thumb.
+ * The thumb is raised, like a Button (on glass, a pane of frosted glass): a knob that lifts a little under the pointer and grows while
+ * it's dragged. The look is the --track-* and --thumb-* tokens, which Switch and Progress will read too.
+ *
+ * Where the thumb sits is --range-at, from 0 at min to 1 at max. Firefox fills the track itself
+ * (::-moz-range-progress). Chrome and Safari can't, so the fill reads --range-at: CSS works it out
+ * from the thumb's place where the browser has scroll-driven animations, and the Solid Range sets
+ * it everywhere else. Static markup writes the first value in its style, for a page with no JS.
+ *
+ * The input's rules sit in :where(), so their specificity is 0, as in input.css. The Field's layout
+ * is beautiful-field's, as in fieldset.css, so it wins over that file's. The track and thumb rules
+ * are written once per engine: a selector list with another engine's pseudo-element is dropped whole.
+ */
+/*
+ * Room around the thumb for its shadow and its growth while dragged, which the input would clip.
+ * The marks under the track are inset by it too, so they line up with the thumb.
+ */
+:where(input[type="range"], input[type="range"] ~ datalist) {
+  --range-room: var(--space-1);
+}
+
+@property --range-at {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.5;
+}
+
+:where(input[type="range"]) {
+  /* The thumb's center: half a thumb in from each end, so the thumb never hangs past the track. */
+  --range-thumb-at: calc(var(--thumb-size) / 2 + (100% - var(--thumb-size)) * var(--range-at));
+  --range-thumb-scale: 1;
+
+  display: block;
+  inline-size: 100%;
+  min-inline-size: 0;
+  block-size: calc(var(--thumb-size) + 2 * var(--range-room));
+  margin: 0;
+  padding: var(--range-room);
+  border: 0;
+  border-radius: var(--radius-full);
+  /* The ring hugs the track and thumb, 2px outside the thumb, not the room around them. */
+  outline-offset: calc(2px - var(--range-room));
+  background: none;
+  appearance: none;
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:where(:hover:enabled) {
+      --range-thumb-shadow: var(--thumb-shadow-hover);
+    }
+  }
+
+  &:where(:active:enabled) {
+    --range-thumb-scale: 1.15;
+    --range-thumb-shadow: var(--thumb-shadow-hover);
+  }
+
+  &:where(:disabled) {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  &::-webkit-slider-runnable-track {
+    block-size: var(--track-height);
+    border-radius: var(--radius-full);
+    background:
+      var(--track-value-image) 0 0 / var(--range-thumb-at) 100% no-repeat,
+      var(--track-fill);
+    box-shadow: var(--track-shadow);
+  }
+
+  &::-webkit-slider-thumb {
+    inline-size: var(--thumb-size);
+    block-size: var(--thumb-size);
+    /* Centered on the track, which is shorter than it. */
+    margin-block-start: calc((var(--track-height) - var(--thumb-size)) / 2);
+    border: 0;
+    border-radius: var(--radius-full);
+    background: var(--thumb-sheen), var(--thumb-fill);
+    box-shadow: var(--thumb-edge), var(--range-thumb-shadow, var(--thumb-shadow));
+    backdrop-filter: blur(var(--thumb-blur)) saturate(var(--control-saturate));
+    appearance: none;
+    scale: var(--range-thumb-scale);
+    transition:
+      scale var(--motion-quick) var(--ease-out),
+      box-shadow var(--motion-quick) var(--ease-out);
+  }
+
+  &::-moz-range-track {
+    block-size: var(--track-height);
+    border-radius: var(--radius-full);
+    background: var(--track-fill);
+    box-shadow: var(--track-shadow);
+  }
+
+  &::-moz-range-progress {
+    block-size: var(--track-height);
+    border-radius: var(--radius-full);
+    background: var(--track-value-image);
+  }
+
+  &::-moz-range-thumb {
+    inline-size: var(--thumb-size);
+    block-size: var(--thumb-size);
+    border: 0;
+    border-radius: var(--radius-full);
+    background: var(--thumb-sheen), var(--thumb-fill);
+    box-shadow: var(--thumb-edge), var(--range-thumb-shadow, var(--thumb-shadow));
+    backdrop-filter: blur(var(--thumb-blur)) saturate(var(--control-saturate));
+    scale: var(--range-thumb-scale);
+    transition:
+      scale var(--motion-quick) var(--ease-out),
+      box-shadow var(--motion-quick) var(--ease-out);
+  }
+}
+
+/* A right-to-left page runs the track from the right. */
+:where(input[type="range"]:dir(rtl))::-webkit-slider-runnable-track {
+  background-position: 100% 0;
+}
+
+/*
+ * Chrome, and Safari 26: the thumb's place in the input, as a view timeline, drives --range-at, so
+ * the fill follows the thumb with no JS. The input clips nothing: its overflow is the thumb's own box.
+ */
+@supports (timeline-scope: --a) and (view-timeline: --a inline) {
+  :where(input[type="range"]) {
+    overflow: hidden;
+    timeline-scope: --range-thumb;
+    animation: range-at linear both;
+    animation-timeline: --range-thumb;
+    /* The thumb travels the content box, inside the room on each side. */
+    animation-range: contain var(--range-room) contain calc(100% - var(--range-room));
+  }
+
+  :where(input[type="range"])::-webkit-slider-thumb {
+    view-timeline: --range-thumb inline;
+  }
+}
+
+@keyframes range-at {
+  from {
+    --range-at: 1;
+  }
+
+  to {
+    --range-at: 0;
+  }
+}
+
+/* Reduced motion: the thumb doesn't grow. */
+@media (prefers-reduced-motion: reduce) {
+  :where(input[type="range"]) {
+    --range-thumb-scale: 1 !important;
+  }
+}
+
+/*
+ * In a Field: the value, an <output>, at the end of the label's line, and the marks, a <datalist>,
+ * under the track.
+ */
+beautiful-field:has(> input[type="range"]) {
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--space-3);
+
+  > * {
+    grid-column: 1 / -1;
+  }
+
+  > :where(label) {
+    grid-column: 1;
+  }
+
+  > :where(output) {
+    grid-area: 1 / 2;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+  }
+
+  /* The value and the marks fade with a disabled slider, as its label does (fieldset.css). */
+  &:is([data-disabled], :has(> input[type="range"]:disabled)) > :where(output, datalist) {
+    opacity: 0.5;
+  }
+
+  /* With the room around the thumb, the gap under the label or description is a field's. */
+  > :where(:is(label, p) + input[type="range"]) {
+    margin-block-start: var(--space-1);
+  }
+}
+
+/*
+ * The marks: a <datalist> of the values worth naming, each <option> under its spot on the track.
+ * Its --at is where, from 0 to 1, as --range-at is the thumb's. A mark at either end lines up with
+ * that end of the track, so its words never hang past it: --range-start is 1 only at 0, and
+ * --range-end only at 1, each a step made of a steep slope that clamp() cuts off.
+ */
+:where(input[type="range"] + output + datalist, input[type="range"] + datalist) {
+  position: relative;
+  display: block;
+  block-size: var(--leading-sm);
+  margin-inline: var(--range-room);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  line-height: var(--leading-sm);
+
+  > :where(option) {
+    --range-start: clamp(0, 1 - var(--at, 0) * 1e6, 1);
+    --range-end: clamp(0, (var(--at, 0) - 1) * 1e6 + 1, 1);
+    --range-shift: calc(-50% * (1 - var(--range-start)) - 50% * var(--range-end));
+
+    position: absolute;
+    inset-inline-start: calc(
+      var(--thumb-size) / 2 + (100% - var(--thumb-size)) * var(--at, 0) +
+        var(--thumb-size) / 2 * (var(--range-end) - var(--range-start))
+    );
+    padding: 0;
+    white-space: nowrap;
+    translate: var(--range-shift);
+  }
+
+  &:where(:dir(rtl)) > :where(option) {
+    translate: calc(-1 * var(--range-shift));
+  }
+}

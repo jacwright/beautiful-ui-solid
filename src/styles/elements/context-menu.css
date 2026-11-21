@@ -1,0 +1,93 @@
+/*
+ * Context menu: an action list (actions.ts) on Dropdown's menu, opened at the pointer or beside a
+ * "…" button (ActionMenu). The menu is dropdown.css's. This adds what an action list has that a
+ * Dropdown doesn't:
+ *
+ *   <beautiful-menu-point>: the point a menu opened at the pointer anchors to. Fixed, and nothing to see.
+ *   data-at, on the menu: it opened at the pointer, so its corner sits on the point, with no gap.
+ *   [role=menuitemcheckbox], [role=menuitemradio]: an item that is on or off. The check sits at the
+ *     end, as on a Listbox's option, and every such item keeps its column.
+ *   [aria-haspopup=menu], on an item: it opens a submenu, a menu nested after it, beside it, with a
+ *     chevron at its end. It stays lit while its submenu is open.
+ *   data-context-menu, on a region: a long press there doesn't call up the phone's own callout.
+ *
+ * Every selector sits in :where(), so its specificity is 0, and this file comes after dropdown.css.
+ */
+:where(beautiful-menu-point) {
+  position: fixed;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+@supports (position-area: bottom) {
+  :where([popover][role="menu"][data-at]) {
+    margin: 0;
+  }
+
+  /* A submenu lines its first item up with the item that opened it, and overlaps the menu's padding. */
+  :where([role="menu"]) :where([popover][role="menu"]) {
+    margin: calc(-1 * var(--space-1) - 1px) 0 0 calc(-1 * var(--space-1));
+  }
+}
+
+/* An item that is on or off: the label, any keys, and the check in a column of its own at the end. */
+:where([role="menu"]) :where([role="menuitemcheckbox"], [role="menuitemradio"]) {
+  grid-template-columns: 1fr auto var(--control-icon);
+
+  &::after {
+    content: "";
+    grid-row: 1;
+    grid-column: -2 / -1;
+    width: var(--control-icon);
+    height: var(--control-icon);
+    background-color: currentColor;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4.5 10.5 3.5 3.5 7.5-8'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+    visibility: hidden;
+  }
+
+  &:where([aria-checked="true"])::after {
+    visibility: visible;
+  }
+
+  > :where(kbd) {
+    grid-column: -3 / -2;
+  }
+}
+
+:where([role="menu"]) :where([role="menuitemcheckbox"], [role="menuitemradio"]):where(:has(> svg)) {
+  grid-template-columns: auto 1fr auto var(--control-icon);
+}
+
+/* An item that opens a submenu: a chevron at the end, pointing to where it opens. */
+:where([role="menu"]) :where([role^="menuitem"][aria-haspopup="menu"])::after {
+  content: "";
+  grid-row: 1;
+  grid-column: -2 / -1;
+  width: var(--control-icon);
+  height: var(--control-icon);
+  background-color: var(--color-text-muted);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6.5 4.5 3.5 3.5-3.5 3.5'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+/* It stays lit while its submenu is open, so the path to the submenu shows. */
+:where([role="menu"]) :where([role^="menuitem"][aria-expanded="true"]) {
+  background-color: var(--item-tint);
+}
+
+:where([data-context-menu]) {
+  -webkit-touch-callout: none;
+
+  :where(input, textarea, [contenteditable]:not([contenteditable="false"])) {
+    -webkit-touch-callout: default;
+  }
+}
+
+/* The shared menu opens beside rows and text boxes as well as buttons, so it never takes their width. */
+@supports (width: anchor-size(width)) {
+  :where([popover][role="menu"][data-actions]) {
+    min-width: var(--dropdown-min-width);
+  }
+}

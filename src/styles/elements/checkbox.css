@@ -1,0 +1,93 @@
+/*
+ * Checkbox: a native <input type="checkbox">, drawn with appearance: none.
+ *
+ * Chrome won't round a native box, so its focus ring would be square: the kit draws its own,
+ * rounded --radius-sm, and the ring follows it. Off, it is a small well like Input's, with an edge
+ * strong enough to find (--control-choice-edge). On or mixed, it fills with the accent and the
+ * mark appears in white. The mark is an SVG background, not a ::before, which Firefox doesn't draw
+ * on an input. Its white is --color-on-fill's, written into the SVG because a data URI can't read
+ * a custom property.
+ *
+ * Indeterminate is the browser's :indeterminate, which only a script can set (the Solid component's
+ * indeterminate prop). It has no attribute, so static markup can't be mixed.
+ *
+ * Every rule sits in :where(), so its specificity is 0, as in input.css. A switch is a checkbox
+ * with role="switch", and has a look of its own (switch.css).
+ */
+:where(input[type="checkbox"]:not([role="switch"])) {
+  --checkbox-mark: none;
+
+  flex: none;
+  /* In a table cell or a line of text, it sits on the middle of the line. */
+  vertical-align: middle;
+  inline-size: var(--control-choice);
+  block-size: var(--control-choice);
+  border: 1px solid var(--control-choice-edge);
+  border-radius: var(--radius-sm);
+  background-color: var(--field-fill);
+  background-image: var(--checkbox-mark);
+  background-position: center;
+  background-repeat: no-repeat;
+  /* The mark grows in from the middle as the box fills, and goes at once when it empties. */
+  background-size: 50%;
+  backdrop-filter: blur(var(--control-blur)) saturate(var(--control-saturate));
+  box-shadow: var(--field-shadow);
+  appearance: none;
+  cursor: pointer;
+  transition:
+    border-color var(--motion-quick) var(--ease-out),
+    background-color var(--motion-quick) var(--ease-out),
+    background-size var(--motion-quick) var(--ease-spring);
+
+  @media (hover: hover) {
+    &:where(:hover:enabled) {
+      border-color: var(--control-choice-edge-hover);
+    }
+  }
+
+  &:where(:checked, :indeterminate) {
+    --checkbox-fill: color-mix(in srgb, var(--color-accent-fill) var(--control-primary-opacity), transparent);
+
+    border-color: var(--checkbox-fill);
+    background-color: var(--checkbox-fill);
+    background-size: 100%;
+    box-shadow: none;
+  }
+
+  /* After hover and the fill's edge, so an invalid box keeps its danger edge, on or off. */
+  &:where([aria-invalid="true"]) {
+    border-color: var(--color-danger);
+  }
+
+  &:where(:checked) {
+    --checkbox-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4.5 8.25 2.25 2.25 4.75-5'/%3E%3C/svg%3E");
+  }
+
+  /* Mixed wins over checked: a script can set both, and the browser reports mixed. */
+  &:where(:indeterminate) {
+    --checkbox-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M4.75 8h6.5'/%3E%3C/svg%3E");
+  }
+
+  &:where(:disabled) {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  /* No growing mark: it is there at its size as the fill fades in. */
+  @media (prefers-reduced-motion: reduce) {
+    background-size: 100%;
+  }
+
+  /*
+   * Forced colors drop the fill and the white mark would vanish on the system's background, so
+   * the browser draws its own box, in the system's colors. Its ring is square there.
+   */
+  @media (forced-colors: active) {
+    appearance: auto;
+  }
+}
+
+/* A table cell that holds only a box, such as a row's "select" column, is as narrow as the box. */
+:where(th, td):where(:has(> input[type="checkbox"]:only-child)) {
+  inline-size: 1%;
+}

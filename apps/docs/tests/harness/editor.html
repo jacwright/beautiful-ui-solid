@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Editor harness</title>
+  </head>
+  <body>
+    <!-- The Solid Editor in each preset, and its formats, for tests/editor.spec.ts. Not part of the site build. -->
+    <main id="app"></main>
+    <script>
+      const query = new URLSearchParams(location.search);
+      document.documentElement.dataset.theme = query.get("theme") ?? "glass";
+      document.documentElement.dataset.mode = query.get("mode") ?? "light";
+    </script>
+    <script type="module" src="./editor.tsx"></script>
+  </body>
+</html>

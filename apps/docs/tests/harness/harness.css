@@ -1,0 +1,14 @@
+/* The docs site's wrappers, as blocks: a custom element is inline until told otherwise. The
+ * harness leaves out docs.css, so the wrappers lay out as plainly as the kit's canvas. Not when
+ * hidden: an author's display would beat the browser's [hidden] rule. */
+:where(
+    beautiful-example,
+    beautiful-demo-stage,
+    beautiful-demo-stack,
+    beautiful-demo-row,
+    beautiful-demo-outline,
+    beautiful-demo-hero,
+    beautiful-demo-name
+  ):not([hidden]) {
+  display: block;
+}

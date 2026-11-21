@@ -1,0 +1,65 @@
+/*
+ * Textarea: a native <textarea>, and the count of characters left under one with a maxlength.
+ *
+ * It is an Input's well (input.css holds the fill, edge, shade, hover, invalid, disabled and
+ * autofill), with paragraph line height, and it grows. It starts at its rows, 3 when the Solid
+ * component writes them, and grows a line at a time as the text does, up to --field-max-lines,
+ * then scrolls. The browser grows it with field-sizing, reading the rows from the attribute. A
+ * browser without them gets the Solid component's few lines of JS, or, on a static page with no
+ * JS, the native rows and a handle to drag it taller.
+ *
+ * Every rule sits in :where(), so its specificity is 0, as in input.css.
+ */
+:where(textarea) {
+  /* The padding and edge, with which a line count makes a height. */
+  --textarea-frame: calc(var(--space-2) * 2);
+
+  block-size: auto;
+  max-block-size: calc(var(--field-max-lines) * 1lh + var(--textarea-frame));
+  line-height: var(--leading);
+  resize: vertical;
+  /* A scrollbar at the cap is the thin one, in the edge's color, so it doesn't crowd the text. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--field-edge-hover) transparent;
+}
+
+@supports (field-sizing: content) and (min-block-size: calc(attr(rows type(<number>), 3) * 1lh)) {
+  :where(textarea) {
+    field-sizing: content;
+    min-block-size: calc(attr(rows type(<number>), 3) * 1lh + var(--textarea-frame));
+    /* It grows itself, so there is nothing to drag. */
+    resize: none;
+  }
+}
+
+/*
+ * The count, right after its textarea, at the field's end edge, in figures that don't shift as they
+ * change. In a Field it takes the Field's muted text. Outside one, it sets its own.
+ */
+:where(textarea + p[data-count]) {
+  margin-block-start: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--control-font-size);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+/* With an error, the count sits on the error's line, at the other end, so the field grows one line, not two. */
+beautiful-field:has(> p[data-count] + p[data-error]) {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-auto-flow: row dense;
+  column-gap: var(--space-3);
+
+  > * {
+    grid-column: 1 / -1;
+  }
+
+  > p[data-count] {
+    grid-column: 2;
+    margin-block-start: var(--space-2);
+  }
+
+  > p[data-count] + p[data-error] {
+    grid-column: 1;
+  }
+}

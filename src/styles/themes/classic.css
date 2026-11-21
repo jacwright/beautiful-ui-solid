@@ -1,0 +1,186 @@
+/* Classic: opaque surfaces, no light effects. Glass falls back to these. */
+:root {
+  --surface-fill: var(--color-raised);
+  --surface-blur: 0px;
+  --surface-saturate: 100%;
+  --surface-edge: var(--color-border);
+  /* Secondary text on a surface. Glass needs it stronger, because what shows through varies. */
+  --surface-text-muted: var(--color-text-muted);
+  /* A background-image over the fill. */
+  --surface-sheen: none;
+  /* Gradients drawn over the edge by a masked pseudo-element: the rim, and a brighter hotspot on top of it. */
+  --surface-rim: none;
+  --surface-hotspot: none;
+  /* The rim's pseudo-element. none leaves it out. */
+  --surface-rim-content: none;
+  /*
+   * A bezel: a band of clear glass this wide around a frosted inner panel. 0 draws no panel.
+   * The inner panel's fill and its edge (a box-shadow).
+   */
+  --surface-bezel: 0px;
+  --surface-inset-fill: transparent;
+  /* A background-image over the inner panel's fill. */
+  --surface-inset-sheen: none;
+  --surface-inset-edge: 0 0 #0000;
+  /* A second hairline beside a Divider's, where light catches the edge of a groove. Classic has none. */
+  --hairline-lit: transparent;
+  /* The rim is 1px times this. 1 / device pixel ratio makes a hairline of one device pixel. */
+  --surface-rim-scale: 1;
+  /* A button's rim is one device pixel as a panel's is. Glass makes it as thick as the button's border in light mode, where a hairline of white is lost. */
+  --control-rim-scale: var(--surface-rim-scale);
+
+  --backdrop-fill: light-dark(rgb(24 24 27 / 0.3), rgb(0 0 0 / 0.6));
+  /* What a layout's page shows behind its panes: Auth layout's card, the Stacked and Sidebar layouts' content. */
+  --layout-backdrop: var(--color-canvas);
+
+  /*
+   * Popups, such as Popover: one pane with no bezel, small enough to sit beside its button. Its fill
+   * holds the text on its own, and its blur is its own, because nothing frosts it from inside.
+   */
+  --popup-fill: var(--color-raised);
+  --popup-blur: 0px;
+  /*
+   * A Tooltip's shortcut: quieter than muted text, so the words lead. Still 4.5:1 on a popup in
+   * either theme. Glass uses it as it is.
+   */
+  --tooltip-shortcut: light-dark(#71717a, #8b8b93);
+  /* A Tooltip's own pane: Popover's in classic and glass. Modern makes it a dark chip in both modes. */
+  --tooltip-fill: var(--popup-fill);
+  --tooltip-ink: var(--color-text);
+  --tooltip-edge: var(--surface-edge);
+  /* How much smaller a popup is as it enters and leaves, growing from the side its anchor names. */
+  --popup-scale: 0.96;
+
+  /*
+   * Cards: panes that sit in the page, not over it. Raised, with a faint shadow that grows under
+   * the pointer when the card is a link, and an edge that darkens with it.
+   */
+  --card-fill: var(--color-raised);
+  /* The light on the pane and its rim, as on a Button. Classic has none. */
+  --card-sheen: none;
+  --card-rim: none;
+  --card-hotspot: none;
+  --card-backdrop: none;
+  --card-edge: var(--color-border);
+  --card-edge-hover: light-dark(#d4d4d8, #3f3f46);
+
+  /*
+   * Tables: the pane the rows sit on. Classic draws a raised card with a hairline edge.
+   */
+  --table-fill: var(--color-raised);
+  --table-blur: 0px;
+  --table-edge: var(--color-border);
+
+  /*
+   * Controls, such as Button. The fill and edge of an outline button, and the light on it, as on
+   * surfaces: classic has none of the light.
+   */
+  --control-fill: var(--color-raised);
+  --control-edge: light-dark(#d4d4d8, #3f3f46);
+  /* A secondary Button's edge. */
+  --control-pane-edge: var(--control-edge);
+  /* A menu's danger item where the keyboard or pointer is on it: a tint of the danger color. Modern keeps the gray of any item. */
+  --item-danger-tint: color-mix(in oklab, var(--color-danger) 10%, transparent);
+  /* How far a lit danger item's text moves toward the text color, to keep its contrast on the tint. */
+  --item-danger-lit: 25%;
+
+  /*
+   * Where you are in a list of places: a Sidebar's current item. A secondary Button's raised pane, so
+   * in glass it is frosted and lit as one is. Modern lays a flat tint instead, as Linear and Notion do.
+   */
+  --nav-current-fill: var(--control-fill);
+  --nav-current-edge: var(--control-pane-edge);
+  --nav-current-shadow: var(--control-shadow);
+  /* How much of a primary's edge color its border draws, and the box its fill reaches; glass's rim draws the rest. */
+  --control-primary-border-opacity: 100%;
+  --control-primary-clip: border-box;
+  --control-blur: 0px;
+  --control-saturate: 100%;
+  --control-sheen: none;
+  --control-rim: none;
+  --control-hotspot: none;
+  --control-hotspot-small: none;
+  /* The rim's pseudo-element. none leaves it out. */
+  --control-rim-content: none;
+  /* How much of a primary Button's fill is opaque. */
+  --control-primary-opacity: 100%;
+
+  /*
+   * Fields, such as Input: a well, where a Button is raised. A faint inset shade under the top
+   * edge, and an edge that darkens under the pointer. In dark mode the fill is a lighter tint of
+   * what it sits on, so it shows on the canvas and on a dialog alike.
+   */
+  --field-fill: light-dark(#ffffff, rgb(255 255 255 / 0.04));
+  --field-edge: var(--control-edge);
+  --field-edge-hover: light-dark(#a1a1aa, #52525b);
+  --field-shadow: inset 0 1px 2px light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.25));
+  /* A value the browser filled in. Opaque, to cover the browser's own color. */
+  --field-autofill: color-mix(in oklab, var(--color-accent) 8%, var(--color-raised));
+  /*
+   * A select's chevron where the browser draws its own list. An image can't take a token's color,
+   * so it is zinc 500, which keeps 3:1 on the fill in light and dark mode. A customizable select
+   * draws its chevron in --color-text-muted instead.
+   */
+  --field-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2371717a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+
+  /*
+   * A track and its thumb, such as Range's. The track is a narrow well, and the part up to the
+   * value is the accent a primary Button is filled with. The thumb is a white knob, raised: a soft
+   * shadow under it that deepens under the pointer, and a hairline edge that holds it apart from a
+   * light page where the track is empty.
+   */
+  --track-fill: light-dark(#e4e4e7, #3f3f46);
+  --track-shadow: inset 0 1px 1px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.3));
+  --track-value: var(--color-accent-fill);
+  /* The fill as drawn: flat in classic. */
+  --track-value-image: linear-gradient(var(--track-value), var(--track-value));
+  --thumb-fill: light-dark(#ffffff, #f4f4f5);
+  --thumb-sheen: none;
+  --thumb-blur: 0px;
+  --thumb-edge: 0 0 0 1px light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.4));
+  /* Progress's bar is a track too. The light over its fill and over its indeterminate sweep: none in classic. */
+  --progress-sheen: none;
+  --progress-sweep-sheen: none;
+
+  /*
+   * Callout: the control fill, tinted this much with the callout's tone in each mode, and the
+   * control edge tinted this much. A pale tone over white reads far stronger than a bright one
+   * over near-black, so light takes less, and the two modes look alike. Classic lays it flat.
+   */
+  --callout-tint-light: 3%;
+  --callout-tint-dark: 8%;
+  --callout-edge: 30%;
+  --callout-shadow: none;
+
+  /* Labels, such as Badge: the light along a badge's top edge. Classic has none. */
+  --badge-highlight: 0 0 #0000;
+
+  /*
+   * Skeleton: a faint tint of the text color, so it shows on the canvas and on a surface alike, and
+   * a soft upright band of light that sweeps across it.
+   */
+  --skeleton-fill: color-mix(in oklab, var(--color-text) 8%, transparent);
+  --skeleton-shine: light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.06));
+  --skeleton-shine-angle: 90deg;
+
+  /*
+   * A checkbox's or radio's edge while it is off. Its well is the field's, but the edge is what
+   * says a box is there, so it keeps 3:1 on the canvas (WCAG 1.4.11): zinc 500, then darker or
+   * lighter under the pointer.
+   */
+  --control-choice-edge: #71717a;
+  --control-choice-edge-hover: light-dark(#52525b, #a1a1aa);
+}
+
+/* One device pixel on 2x and 3x screens, which matches the hairlines of native glass. */
+@media (min-resolution: 2dppx) {
+  :root {
+    --surface-rim-scale: 0.5;
+  }
+}
+
+@media (min-resolution: 3dppx) {
+  :root {
+    --surface-rim-scale: 0.3333;
+  }
+}

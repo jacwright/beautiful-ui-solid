@@ -1,0 +1,62 @@
+/*
+ * Badge: a short label for a status, a category or a count. Text, not a control: it can't be
+ * focused or pressed. A <beautiful-badge>, because no element means "label".
+ *
+ *   data-color: one of the tints (tints.css). Neutral, the default, is left out.
+ *   data-variant: soft, the default and left out, or strong: the hue at full strength.
+ *   data-dot: a dot of the hue before the words, for a status.
+ *
+ * It is the height of a line of small text, so it sits in a sentence, a table row or a heading
+ * without stretching the line. Every selector sits in :where(), so its specificity is 0.
+ */
+:where(beautiful-badge) {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  line-height: var(--leading-sm);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--tint-ink);
+  background: var(--tint-fill);
+  box-shadow: inset 0 0 0 1px var(--tint-edge), var(--badge-highlight);
+  /* Forced colors drop the fill and the edge. A transparent outline is drawn in their place. */
+  outline: 1px solid transparent;
+  outline-offset: -1px;
+}
+
+:where(beautiful-badge[data-variant="strong"]) {
+  color: var(--tint-on-solid);
+  background: var(--tint-solid);
+  box-shadow: var(--badge-highlight);
+}
+
+:where(beautiful-badge[data-dot])::before {
+  content: "";
+  flex: none;
+  inline-size: 0.5em;
+  block-size: 0.5em;
+  border-radius: 50%;
+  background: var(--tint);
+}
+
+:where(beautiful-badge[data-variant="strong"][data-dot])::before {
+  background: currentColor;
+}
+
+/* Forced colors drop backgrounds, so the dot is drawn in the text's color. */
+@media (forced-colors: active) {
+  :where(beautiful-badge[data-dot])::before {
+    background: CanvasText;
+  }
+}
+
+/* An icon is the size of the words, in their color. */
+:where(beautiful-badge > svg) {
+  flex: none;
+  inline-size: 1em;
+  block-size: 1em;
+}

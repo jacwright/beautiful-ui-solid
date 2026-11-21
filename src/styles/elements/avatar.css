@@ -1,0 +1,220 @@
+/*
+ * Avatar: a person, a team or a site, as a photo or their initials. <beautiful-avatar> draws the
+ * initials (data-initials) in its ::before, with an optional <img> laid over them, so the initials
+ * show while the photo loads. role="img" and aria-label give it its name. The initials are no text
+ * node: they are never read, copied or translated, and a button around an avatar has no visible
+ * text that its label must repeat.
+ *
+ *   data-initials: one or two letters, or a count such as "+3".
+ *   data-size:   xs, sm, md (the default), lg, xl. --avatar-size sets any other size.
+ *   data-color:  the initials' tint: blue, indigo, violet, pink, orange, amber, emerald, teal, or
+ *                neutral. The Solid component picks one from the name.
+ *   data-square: corners for a team or a site, where a circle is a person.
+ *
+ * <beautiful-avatar-group> overlaps the avatars in it, with a clear gap cut around each. Its
+ * data-size sizes the avatars that set none.
+ *
+ * Every selector sits in :where(), so its specificity is 0, as in button.css.
+ */
+:where(beautiful-avatar) {
+  /* The tint's hue and strength. data-color sets the hue; neutral drops the chroma. */
+  --avatar-hue: 255;
+  --avatar-chroma: 1;
+
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  inline-size: var(--avatar-size, var(--avatar-md));
+  block-size: var(--avatar-size, var(--avatar-md));
+  border-radius: 50%;
+  vertical-align: middle;
+  overflow: hidden;
+  /*
+   * Pale tint with deep ink in light mode, deep tint with pale ink in dark. Opaque on every theme,
+   * so the initials keep their contrast over whatever is behind.
+   */
+  background: light-dark(
+    oklch(0.92 calc(0.06 * var(--avatar-chroma)) var(--avatar-hue)),
+    oklch(0.36 calc(0.07 * var(--avatar-chroma)) var(--avatar-hue))
+  );
+  color: light-dark(
+    oklch(0.4 calc(0.13 * var(--avatar-chroma)) var(--avatar-hue)),
+    oklch(0.9 calc(0.07 * var(--avatar-chroma)) var(--avatar-hue))
+  );
+  /* The initials scale with the avatar. */
+  font-size: calc(var(--avatar-size, var(--avatar-md)) * 0.4);
+  font-weight: var(--weight-strong);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  user-select: none;
+}
+
+:where(beautiful-avatar[data-size="xs"]) { --avatar-size: var(--avatar-xs); }
+:where(beautiful-avatar[data-size="sm"]) { --avatar-size: var(--avatar-sm); }
+:where(beautiful-avatar[data-size="md"]) { --avatar-size: var(--avatar-md); }
+:where(beautiful-avatar[data-size="lg"]) { --avatar-size: var(--avatar-lg); }
+:where(beautiful-avatar[data-size="xl"]) { --avatar-size: var(--avatar-xl); }
+
+:where(beautiful-avatar[data-color="blue"]) { --avatar-hue: 255; }
+:where(beautiful-avatar[data-color="indigo"]) { --avatar-hue: 280; }
+:where(beautiful-avatar[data-color="violet"]) { --avatar-hue: 305; }
+:where(beautiful-avatar[data-color="pink"]) { --avatar-hue: 350; }
+:where(beautiful-avatar[data-color="orange"]) { --avatar-hue: 45; }
+:where(beautiful-avatar[data-color="amber"]) { --avatar-hue: 80; }
+:where(beautiful-avatar[data-color="emerald"]) { --avatar-hue: 160; }
+:where(beautiful-avatar[data-color="teal"]) { --avatar-hue: 195; }
+:where(beautiful-avatar[data-color="neutral"]) { --avatar-chroma: 0; }
+
+:where(beautiful-avatar[data-square]) {
+  border-radius: var(--avatar-radius-square);
+}
+
+/*
+ * The photo covers the initials once it has loaded. One that fails may show the browser's
+ * broken-image mark, as Chrome's does, so the Solid component drops it and the initials show.
+ */
+:where(beautiful-avatar) > :where(img) {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+/*
+ * The edge, over the photo: a hairline at 10% of the text color, so a white photo doesn't melt
+ * into a white page. Glass adds its light to the same hairline, brightest at the upper right, as
+ * on a Button. Classic sets the rim and hotspot to none.
+ */
+:where(beautiful-avatar)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background:
+    var(--control-hotspot-small),
+    var(--control-rim),
+    linear-gradient(color-mix(in oklab, var(--color-text) 10%, transparent) 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  pointer-events: none;
+}
+
+/* The initials. */
+:where(beautiful-avatar)::before {
+  content: attr(data-initials);
+}
+
+/* No initials, as for a name with no letters: an outline of a person. */
+:where(beautiful-avatar:not([data-initials]), beautiful-avatar[data-initials=""])::before {
+  content: "";
+  inline-size: 60%;
+  block-size: 60%;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'%3E%3Ccircle cx='10' cy='7' r='3.25'/%3E%3Cpath d='M3.75 17c.6-3.2 3.1-5 6.25-5s5.65 1.8 6.25 5'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+/*
+ * A group: avatars side by side, each overlapping the one before by a quarter. Each but the last
+ * has a clear gap cut where the next one sits, so the page or the glass shows through it, not a
+ * ring in a guessed background color. The overlap and the cut assume one size, so size the group,
+ * not its avatars. Square avatars sit apart instead.
+ */
+:where(beautiful-avatar-group) {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+/* A group's size is every avatar's in it that doesn't set its own. */
+:where(beautiful-avatar-group[data-size="xs"]) { --avatar-size: var(--avatar-xs); }
+:where(beautiful-avatar-group[data-size="sm"]) { --avatar-size: var(--avatar-sm); }
+:where(beautiful-avatar-group[data-size="lg"]) { --avatar-size: var(--avatar-lg); }
+:where(beautiful-avatar-group[data-size="xl"]) { --avatar-size: var(--avatar-xl); }
+
+:where(beautiful-avatar-group) > :where(beautiful-avatar:not([data-square]) + beautiful-avatar:not([data-square])) {
+  margin-inline-start: calc(var(--avatar-size, var(--avatar-md)) * -0.25);
+}
+
+:where(beautiful-avatar-group) > :where(beautiful-avatar:not([data-square]):has(+ beautiful-avatar:not([data-square]))) {
+  --avatar-cut: calc(var(--avatar-size, var(--avatar-md)) / 2 + var(--avatar-group-gap));
+
+  mask: radial-gradient(
+    circle at calc(var(--avatar-size, var(--avatar-md)) * 1.25) 50%,
+    transparent var(--avatar-cut),
+    #000 calc(var(--avatar-cut) + 0.5px)
+  );
+}
+
+:where(beautiful-avatar-group:dir(rtl)) > :where(beautiful-avatar:not([data-square]):has(+ beautiful-avatar:not([data-square]))) {
+  mask: radial-gradient(
+    circle at calc(var(--avatar-size, var(--avatar-md)) * -0.25) 50%,
+    transparent var(--avatar-cut),
+    #000 calc(var(--avatar-cut) + 0.5px)
+  );
+}
+
+:where(beautiful-avatar-group) > :where(beautiful-avatar[data-square] + beautiful-avatar) {
+  margin-inline-start: var(--space-1);
+}
+
+/*
+ * A button or link that holds only an avatar, such as the account menu's: the avatar is the
+ * button. It drops the button's fill, edge and padding and takes the avatar's corners, so the
+ * focus ring circles the avatar. Press still shrinks it a little. CSS can't see a text node, so
+ * aria-label is the tell: a button with no words needs one, and a button with words beside its
+ * avatar keeps the Button look. Where the pointer is a finger, its ::before reaches out to the
+ * control height, so even a small avatar is a 44px target.
+ */
+:where(button, a[data-button]):where([aria-label]:has(> beautiful-avatar:only-child)) {
+  --control-blur: 0px;
+  --control-saturate: 100%;
+
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  box-shadow: none;
+}
+
+:where(button, a[data-button]):where([aria-label]:has(> beautiful-avatar[data-square]:only-child)) {
+  border-radius: var(--avatar-radius-square);
+}
+
+:where(button, a[data-button]):where([aria-label]:has(> beautiful-avatar:only-child))::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  inline-size: auto;
+  block-size: auto;
+  padding: 0;
+  background: none;
+  mask: none;
+  transform: none;
+}
+
+@media (pointer: coarse) {
+  :where(button, a[data-button]):where([aria-label]:has(> beautiful-avatar:only-child))::before {
+    inset: min(0px, (100% - var(--control-height)) / 2);
+  }
+}
+
+:where(button, a[data-button])[aria-label] > :where(beautiful-avatar:only-child) {
+  transition: filter var(--motion-quick) var(--ease-out);
+}
+
+@media (hover: hover) {
+  :where(button, a[data-button]):where([aria-label]:hover) > :where(beautiful-avatar:only-child) {
+    filter: brightness(0.92);
+  }
+}
+
+:where(button, a[data-button]):where([aria-label]:active) > :where(beautiful-avatar:only-child) {
+  filter: brightness(0.85);
+}

@@ -1,0 +1,78 @@
+/*
+ * DatePicker's calendar: a Popover panel ([data-date-picker]) with a header of month buttons
+ * around the month's name, and a grid of days. The field and its calendar button are Input's
+ * (input.css). The panel is a popup, so glass frosts it as it does every Popover.
+ *
+ * A day is a gridcell, not a button, as in APG's Date Picker Dialog. The selected day is filled
+ * with the accent, today is in accent text, and a day outside min and max is faded.
+ */
+:where([data-date-picker]) {
+  /* Seven days of the control's height, wider for a finger, and the panel's padding. */
+  --popover-width: calc(7 * var(--control-height) + 2 * var(--space-3) + 2px);
+
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
+
+:where([data-date-picker]) > :where(header) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+
+  > :where(h2) {
+    font-size: var(--control-font-size);
+    font-weight: var(--weight-strong);
+    line-height: var(--leading-sm);
+  }
+}
+
+:where([data-date-picker]) :where(table) {
+  border-collapse: collapse;
+  font-size: var(--control-font-size);
+  font-variant-numeric: tabular-nums;
+}
+
+:where([data-date-picker]) :where(th) {
+  block-size: var(--control-height);
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+:where([data-date-picker]) :where(td) {
+  inline-size: var(--control-height);
+  block-size: var(--control-height);
+  padding: 0;
+  border-radius: var(--radius-md);
+  text-align: center;
+  outline-offset: 0;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--motion-quick) var(--ease-out);
+
+  &:where(:empty) {
+    cursor: default;
+  }
+
+  &:where([aria-current="date"]) {
+    color: var(--color-accent);
+    font-weight: var(--weight-strong);
+  }
+
+  &:where([aria-selected="true"]) {
+    color: var(--color-on-fill);
+    background-color: color-mix(in srgb, var(--color-accent-fill) var(--control-primary-opacity), transparent);
+    font-weight: var(--weight-strong);
+  }
+
+  &:where([aria-disabled="true"]) {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+@media (hover: hover) {
+  :where([data-date-picker]) :where(td:not(:empty, [aria-selected="true"], [aria-disabled="true"]):hover) {
+    background-color: color-mix(in oklab, var(--color-text) 8%, transparent);
+  }
+}

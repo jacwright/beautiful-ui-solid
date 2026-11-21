@@ -1,0 +1,390 @@
+/*
+ * The theme-independent tokens. The theme stylesheets set the surface tokens.
+ * data-mode picks light or dark through color-scheme, so each color is one light-dark() pair.
+ */
+:root {
+  color-scheme: light dark;
+
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  /* Line heights. --leading is the base text's; sm and lg are a size's own. */
+  --leading: 1.5;
+  --leading-xs: 1rem;
+  --leading-sm: 1.25rem;
+  --leading-lg: 1.75rem;
+  /*
+   * The heading sizes above --text-lg, each with its own line height. Display is for a landing
+   * page's headline: the one size that scales with the screen, from 36px on a phone to 48px.
+   */
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-display: clamp(2.25rem, 1.6rem + 2.4vw, 3rem);
+  --leading-xl: 1.75rem;
+  --leading-2xl: 2rem;
+  --leading-3xl: 2.25rem;
+  --leading-display: 1.1;
+  /* Large type is drawn a little tighter, so its letters read as one word. */
+  --tracking-tight: -0.01em;
+  --tracking-tighter: -0.02em;
+  /* Body text's own tracking. A theme whose face is drawn loose tightens it. */
+  --tracking-text: normal;
+  /* The weight of what stands out: a heading, a title, a table's header. A control's label may be lighter. */
+  --weight-strong: 600;
+  --weight-control: var(--weight-strong);
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  /* The larger steps are for websites: the space between a page's sections and around its figures. A site is mostly white space. */
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
+
+  /*
+   * Hairlines: Divider's line, the line between a Dropdown's groups, between a List's or a
+   * Description list's rows, and around a Sidebar's header and footer. A tint of the text around
+   * them, so a line reads on the canvas, a dialog or a pane of glass alike, in either mode. Soft is
+   * a fainter line, a Divider's data-soft.
+   */
+  --hairline-width: 1px;
+  --color-hairline: color-mix(in oklab, currentColor 10%, transparent);
+  --color-hairline-soft: color-mix(in oklab, currentColor 5%, transparent);
+
+  /* The least a focusable thing is rounded, so its ring never has square corners (base.css). */
+  --radius-xs: 0.1875rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  /* Fully round: a pill, or a circle on a square. */
+  --radius-full: 9999px;
+
+  /*
+   * Elevation: how far a pane floats above what is under it. Every outer shadow in the kit is one of
+   * these four depths, never its own. Each is several layers, tight to wide, because one blur looks
+   * like a smudge: a thin contact shadow where the pane meets the page, then softer and broader ones.
+   *
+   *   1  a control that sits on the page or a card: Button, a slider's thumb
+   *   2  a pane that sits in the page: Card, and what rests on it
+   *   3  a pane that floats over the page: Popover, a menu, a toast, a card under the pointer
+   *   4  a pane that takes over the page: Dialog
+   *
+   * Light falls from the upper right, so a theme can cast shadows away from it: --shadow-cast is
+   * how far left each pixel of drop falls, 0 for straight down. --shadow-halo is a fainter shadow
+   * with no offset, all the way round, which a theme that draws a light edge uses to give it something
+   * dark to stand out from. Classic casts straight down and has no halo. docs: the Shadows page.
+   */
+  --shadow-cast: 0;
+  --shadow-halo: transparent;
+  --shadow-1:
+    calc(1px * var(--shadow-cast)) 1px 1px 0 light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.3)),
+    calc(2px * var(--shadow-cast)) 2px 4px -1px light-dark(rgb(0 0 0 / 0.07), rgb(0 0 0 / 0.35)),
+    0 0 0.1875rem var(--shadow-halo);
+  --shadow-2:
+    calc(1px * var(--shadow-cast)) 1px 2px 0 light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.3)),
+    calc(3px * var(--shadow-cast)) 3px 8px -2px light-dark(rgb(0 0 0 / 0.09), rgb(0 0 0 / 0.38)),
+    calc(8px * var(--shadow-cast)) 8px 16px -6px light-dark(rgb(0 0 0 / 0.09), rgb(0 0 0 / 0.4)),
+    0 0 0.3125rem var(--shadow-halo);
+  --shadow-3:
+    calc(1px * var(--shadow-cast)) 1px 2px 0 light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.32)),
+    calc(6px * var(--shadow-cast)) 6px 14px -3px light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.45)),
+    calc(16px * var(--shadow-cast)) 16px 32px -8px light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.5)),
+    0 0 0.375rem var(--shadow-halo);
+  --shadow-4:
+    calc(2px * var(--shadow-cast)) 2px 4px 0 light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.32)),
+    calc(12px * var(--shadow-cast)) 12px 28px -6px light-dark(rgb(0 0 0 / 0.14), rgb(0 0 0 / 0.5)),
+    calc(32px * var(--shadow-cast)) 32px 64px -12px light-dark(rgb(0 0 0 / 0.18), rgb(0 0 0 / 0.6)),
+    0 0 0.5rem var(--shadow-halo);
+  /* What each part reads. A part names its depth, so changing a depth changes every part on it. */
+  --shadow-overlay: var(--shadow-4);
+  --shadow-popup: var(--shadow-3);
+  --shadow-card: var(--shadow-2);
+  --shadow-card-hover: var(--shadow-3);
+  --control-shadow: var(--shadow-1);
+  --thumb-shadow: var(--shadow-1);
+  --thumb-shadow-hover: var(--shadow-1);
+
+  --color-canvas: light-dark(#f6f6f7, #111113);
+  --color-raised: light-dark(#ffffff, #1c1c1f);
+  --color-text: light-dark(#18181b, #f4f4f5);
+  --color-text-muted: light-dark(#52525b, #a1a1aa);
+  /*
+   * Quieter than muted, for a secondary line such as an option's description: the lightest that
+   * keeps 4.5:1 on a lit item's tint (4.9:1 on #e2e2e3). Glass sets its own, darker for its bright stage.
+   */
+  --color-text-subtle: light-dark(#5f5f68, #a1a1aa);
+  --color-border: light-dark(#e4e4e7, #2e2e33);
+  --color-accent: light-dark(#2563eb, #60a5fa);
+  /*
+   * A crimson, oklch hue 20, not the orange-leaning 27 of #cc2222: thin red text and a 1px edge
+   * lose their chroma to antialiasing, and a brick red then reads as orange. Text needs 4.5:1 on the
+   * canvas: 5.2 in light mode and 5.9 in dark. Glass sets its own, paler in dark so it holds 4.5:1 over
+   * the bright stage.
+   */
+  --color-danger: light-dark(#c91f3a, #fb5663);
+  /*
+   * Done and needs care: a Toast's check and a Callout's icon. Each keeps 4.5:1 on the canvas,
+   * more than an icon's 3:1, so text may use them too.
+   */
+  --color-success: light-dark(#15803d, #4ade80);
+  --color-warning: light-dark(#b45309, #fbbf24);
+  /*
+   * Fills that carry white text: a primary Button. Each keeps at least 4.5:1 with --color-on-fill.
+   * Accent and danger are a little muted (chroma 0.175 to 0.18, not the 0.21 of --color-accent),
+   * so a filled button reads as the main action without glaring. Glass sets its own.
+   */
+  --color-neutral-fill: light-dark(#18181b, #52525b);
+  --color-accent-fill: oklch(0.55 0.175 262);
+  --color-danger-fill: oklch(0.55 0.18 27);
+  --color-on-fill: #ffffff;
+  /*
+   * A fill that carries no text: a Meter's bar when its level needs care. Amber, a step deeper in
+   * light mode, so it keeps 3:1 against the light page and the track.
+   */
+  --color-warning-fill: light-dark(#d97706, #f59e0b);
+
+  /*
+   * Controls: Button now, and the form fields after it. One size, larger where the pointer is a finger,
+   * so a target is at least 44px tall and a field's 16px text keeps iOS from zooming in.
+   */
+  --control-height: 2.25rem;
+  --control-pad-x: var(--space-3);
+  --control-font-size: var(--text-sm);
+  --control-icon: 1rem;
+  /* The most lines a Textarea grows to before it scrolls. */
+  --field-max-lines: 12;
+  /* A checkbox's box and a radio's circle. Larger where the pointer is a finger. */
+  --control-choice: 1rem;
+  /* The dot in a checked radio. */
+  --control-choice-dot: 0.375rem;
+  /* A row in a list of choices: a Dropdown's item now, and Listbox's and Combobox's options after it. */
+  --item-height: 2rem;
+  /* A Command palette's list scrolls past this many rows' height, so it never fills the screen. Its section headings take part of it. */
+  --command-palette-rows: 10;
+  /* An Accordion's summary: a step taller than a control, so a list of questions reads as rows. */
+  --accordion-row: 2.5rem;
+  /* The space between rows that stand apart, such as a Sidebar's items, so a lit row never touches the next. */
+  --item-gap: 0.125rem;
+  /*
+   * A Sidebar: the space round each of its parts, a row's height, and the space between a row's icon
+   * and its label. Modern packs them tighter, as Notion's sidebar is.
+   */
+  --sidebar-pad: var(--space-4);
+  --sidebar-item-height: var(--control-height);
+  --sidebar-item-gap: var(--space-3);
+  /*
+   * A Tree's rows: 1 writes them in the muted color (modern, as Notion does), 0 in the text's; the
+   * row under the pointer or picked takes the text's. And how much of the text color tints the
+   * selected row.
+   */
+  --tree-muted: 0;
+  --tree-selected-tint: 12%;
+  /*
+   * A Switch's track. Its thumb is the track's height less the inset on each side, so it sits in
+   * the track with an even gap all round. On a touch screen it grows, as the controls do.
+   */
+  --switch-width: 2rem;
+  --switch-height: 1.25rem;
+  --switch-inset: 0.125rem;
+
+  /*
+   * A track and the thumb that slides on it: Range now, and Progress after it. The
+   * thumb is a target for a pointer, so it grows for a finger.
+   */
+  --track-height: 0.375rem;
+  --thumb-size: 1.25rem;
+
+  /*
+   * Spinner. sm is the size of the text around it, so it sits in a line or a Button; md fits a
+   * card or a panel, and lg a page.
+   */
+  --spinner-sm: 1em;
+  --spinner-md: 2rem;
+  --spinner-lg: 3rem;
+
+  /*
+   * Tables: a row's least height, and a dense row's, which is a list item's. On a touch screen
+   * --item-height grows to 44px, so a dense row is a finger's height there too.
+   */
+  --table-row-height: 2.75rem;
+  --table-row-height-dense: var(--item-height);
+  /*
+   * A table's rules and tints, drawn in the text's own color so they read on any fill, theme and
+   * mode: the line under the header, the lines between rows and columns, a striped row, and a row
+   * link under the pointer.
+   */
+  --table-rule-strong: color-mix(in oklab, currentColor 16%, transparent);
+  --table-rule: color-mix(in oklab, currentColor 8%, transparent);
+  --table-stripe: color-mix(in oklab, currentColor 3%, transparent);
+  --table-hover: color-mix(in oklab, currentColor 6%, transparent);
+
+  /*
+   * Avatar sizes. md suits a list row or a navbar, xs and sm a menu item or a line of text, lg a
+   * comment, xl a profile. --avatar-size sets any other size, on an avatar or on what holds it.
+   */
+  --avatar-xs: 1.25rem;
+  --avatar-sm: 1.5rem;
+  --avatar-md: 2rem;
+  --avatar-lg: 2.5rem;
+  --avatar-xl: 4rem;
+  /* A square avatar's corners, as a share of its size, so every size has the same shape. */
+  --avatar-radius-square: 22%;
+  /* The clear gap around each avatar where a group overlaps them. */
+  --avatar-group-gap: 0.125rem;
+  /* A Description list's term column, beside its details: half the list, up to 20rem. */
+  --term-width: min(50%, 20rem);
+  /* A Shortcut sheet's keys button, while keys are being changed: as wide as ⇧⌘K and a little more. */
+  --shortcut-keys-width: var(--space-24);
+  /* Skeleton's sizes: an avatar's circle, and the last line of a paragraph, shorter than the rest. */
+  --skeleton-circle: var(--avatar-lg);
+  --skeleton-last-line: 60%;
+  /* Progress: how thick its bar is. The same for a finger, since nobody presses it. */
+  --progress-height: var(--space-2);
+  /* Meter: how thick its bar is. Progress's, so a level and a task read as one family. */
+  --meter-height: var(--progress-height);
+  /*
+   * How much of its color tints a pressed Toggle button's well. Dark mode takes more: its well is
+   * darker than the raised pane beside it, and the tint has to lift it clear.
+   */
+  --toggle-tint: 12%;
+  --toggle-tint-dark: 20%;
+  /*
+   * How far a field's focus ring stands off its edge: an Input's, a Select's, a Tag field's. A
+   * negative offset lays the ring over the field's own border, as modern does.
+   */
+  --field-focus-offset: 2px;
+  /* A Chip: a pill a little shorter than a control, so a row of them sits beside one. */
+  --chip-height: 1.75rem;
+  /* A Tag field's text box: the narrowest it gets beside the chips before it wraps to a line of its own. */
+  --tag-field-text-min: 6rem;
+
+  /*
+   * Websites: marketing pages and blog posts (web.css). The widths a page's blocks keep to, the
+   * space at a phone's edge, and the space above and below each section, which grows with the screen.
+   * Prose is about 70 characters of 18px text, the line a blog post reads best at.
+   */
+  --width-prose: 40rem;
+  --width-wide: 56rem;
+  --width-page: 72rem;
+  --space-gutter: clamp(var(--space-4), 4vw, var(--space-8));
+  --space-section: clamp(var(--space-16), 10vw, var(--space-32));
+  /*
+   * A website is ink on white. The page is white (a dark page is the canvas), and a band, a section set
+   * apart, is the soft gray beside it. Indigo and marigold are for highlights and for the washes in
+   * illustrations, and nowhere else: never a button or a link, which are ink and cobalt. Indigo is the
+   * deep ink-dark one on white, and its pale step on a dark page. Marigold is the same in both modes,
+   * and the ink on it is the text color's light value.
+   */
+  --color-page: light-dark(#ffffff, #111113);
+  --color-band: light-dark(#f6f6f7, #1c1c1f);
+  /* An app's sidebar: a warm light gray beside the white page, a step up from the page in dark mode. */
+  --color-sidebar: light-dark(#f9f8f7, #18181b);
+  --color-indigo: light-dark(#4b439c, #b6b8ef);
+  --color-marigold: #f2b33d;
+  --color-on-marigold: #18181b;
+  /*
+   * A stage: the soft washes of indigo and marigold behind a section so glass has color to catch
+   * (web.css, data-stage). Glass on plain white looks like classic. Light and quiet in light mode,
+   * deeper in dark.
+   */
+  --stage-indigo: light-dark(rgb(75 67 156 / 0.22), rgb(110 100 220 / 0.34));
+  --stage-marigold: light-dark(rgb(242 179 61 / 0.4), rgb(242 179 61 / 0.26));
+  /*
+   * The paper an illustration is painted on, in both modes. Its image prompt asks for the same
+   * color, so the image's edges melt into the card it sits on (the docs' Illustrations page).
+   */
+  --color-paper: #fcf5ec;
+  /* A spot illustration: one small object beside a feature's words. */
+  --illustration-spot: 6rem;
+
+  /* Motion. Things enter slower than they leave. A theme may change any of these. */
+  --motion-enter: 320ms;
+  --motion-exit: 180ms;
+  /* An indeterminate Progress: one sweep of its glow across the bar. */
+  --motion-sweep: 1.6s;
+  /* A control's hover and press. */
+  --motion-quick: 120ms;
+  /* The focus ring's glide from one control to the next (focus-ring.ts). Fast, so it never holds up typing. */
+  --motion-focus: 120ms;
+  /*
+   * Something that glides from one place to another: a bar, such as Navbar's current page and
+   * Tabs' selected line, and a Switch's thumb crossing its track.
+   */
+  --motion-slide: 240ms;
+  /* Popups: small surfaces that open beside their button, such as Popover. Quicker than a dialog. */
+  --motion-popup-enter: 200ms;
+  --motion-popup-exit: 120ms;
+  /*
+   * How long the pointer rests on a control, or keyboard focus stays on it, before its Tooltip
+   * shows, and how long the tip stays after they leave. While one tip shows, the next shows at
+   * once (tooltip.css), so the hide delay is also the time to reach the next control.
+   */
+  --tooltip-delay: 200ms;
+  --tooltip-hide-delay: 100ms;
+  /* A panel that opens in place and pushes the page down, such as Disclosure's. */
+  --motion-expand: 240ms;
+  --motion-collapse: 160ms;
+  /* One turn of a Spinner's arc. */
+  --motion-spin: 800ms;
+  /* How long a Spinner waits before it shows, so a load quicker than this never flashes one. */
+  --spinner-delay: 400ms;
+  /* Skeleton: how long a placeholder waits before it fades in, so a fast load never flashes one, and one sweep of its light. */
+  --skeleton-delay: 300ms;
+  --motion-shimmer: 2s;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  /* Speeds up, then settles: for something that moves from one place to another, such as the focus ring. */
+  --ease-in-out: cubic-bezier(0.45, 0, 0.2, 1);
+  /* A damped spring that overshoots by about 4%. Generated from a spring with damping 0.72. */
+  --ease-spring: linear(0, 0.04, 0.138, 0.266, 0.403, 0.537, 0.657, 0.76, 0.845, 0.911, 0.96, 0.995, 1.018,
+    1.031, 1.037, 1.038, 1.036, 1.032, 1.027, 1.022, 1.017, 1.012, 1.008, 1.005, 1);
+  /* Decelerates hard with no overshoot, for things that slide in from an edge. */
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+:root[data-mode="light"] {
+  color-scheme: light;
+}
+
+:root[data-mode="dark"] {
+  color-scheme: dark;
+}
+
+@media (pointer: coarse) {
+  :root {
+    --control-height: 2.75rem;
+    --control-pad-x: var(--space-4);
+    --control-font-size: var(--text-base);
+    --control-icon: 1.25rem;
+    --control-choice: 1.25rem;
+    --item-height: 2.75rem;
+    --control-choice-dot: 0.5rem;
+    --accordion-row: 3rem;
+    --switch-width: 2.75rem;
+    --switch-height: 1.625rem;
+    --thumb-size: 1.75rem;
+    --chip-height: 2.25rem;
+  }
+}
+
+/* Reduced motion keeps short fades. Components drop their movement under the same query. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-enter: 150ms;
+    --motion-exit: 120ms;
+    /* The ring jumps to the next control. */
+    --motion-focus: 0ms;
+    /* The bar jumps to the next item. */
+    --motion-slide: 0ms;
+  }
+}
